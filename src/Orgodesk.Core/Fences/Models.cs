@@ -25,6 +25,9 @@ public sealed class Fence
     /// <summary>"#AARRGGBB" override for the body color, or null for the global setting.</summary>
     public string? Color { get; set; }
 
+    /// <summary>"#AARRGGBB" override for the title bar color, or null for the global setting.</summary>
+    public string? TitleColor { get; set; }
+
     public bool RolledUp { get; set; }
 
     /// <summary>Auto-roll: stay rolled up, open while the mouse is over the fence, roll back when it leaves.</summary>

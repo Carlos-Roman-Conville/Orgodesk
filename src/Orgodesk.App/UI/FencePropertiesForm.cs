@@ -9,8 +9,9 @@ namespace Orgodesk.App.UI;
 public sealed class FencePropertiesForm : Form
 {
     private readonly TextBox _title = new() { Width = 320 };
-    private readonly CheckBox _customColor = new() { Text = "Use a custom color for this Orgo", AutoSize = true };
+    private readonly CheckBox _customColor = new() { Text = "Use custom colors for this Orgo", AutoSize = true };
     private readonly ColorPicker _color = new();
+    private readonly ColorPicker _titleColor = new();
     private readonly TextBox _portal = new() { Width = 240 };
     private readonly ComboBox _sort = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 140 };
     private readonly CheckBox _rolled = new() { Text = "Rolled up", AutoSize = true };
@@ -58,7 +59,8 @@ public sealed class FencePropertiesForm : Form
 
         Row("Title", _title);
         Row("", _customColor);
-        Row("Color", _color);
+        Row("Orgo color", _color);
+        Row("Title bar color", _titleColor);
         Row("Portal folder", portalRow);
         Row("Sort items by", _sort);
         Row("", _rolled);
@@ -80,10 +82,11 @@ public sealed class FencePropertiesForm : Form
         Controls.Add(buttons);
 
         _title.Text = fence.Title;
-        _customColor.Checked = fence.Color != null;
+        _customColor.Checked = fence.Color != null || fence.TitleColor != null;
         _color.Value = fence.Color ?? settings.FenceColor;
-        _color.Enabled = _customColor.Checked;
-        _customColor.CheckedChanged += (_, _) => _color.Enabled = _customColor.Checked;
+        _titleColor.Value = fence.TitleColor ?? settings.TitleBarColor;
+        _color.Enabled = _titleColor.Enabled = _customColor.Checked;
+        _customColor.CheckedChanged += (_, _) => _color.Enabled = _titleColor.Enabled = _customColor.Checked;
         _portal.Text = fence.PortalPath ?? "";
         _sort.SelectedItem = fence.Sort;
         _rolled.Checked = fence.RolledUp;
@@ -95,6 +98,7 @@ public sealed class FencePropertiesForm : Form
     {
         fence.Title = string.IsNullOrWhiteSpace(_title.Text) ? fence.Title : _title.Text.Trim();
         fence.Color = _customColor.Checked ? _color.Value : null;
+        fence.TitleColor = _customColor.Checked ? _titleColor.Value : null;
         var portal = string.IsNullOrWhiteSpace(_portal.Text) ? null : _portal.Text.Trim();
         if (portal != null && !Directory.Exists(portal)) portal = null;
         bool changed = !string.Equals(portal, _originalPortal, StringComparison.OrdinalIgnoreCase);

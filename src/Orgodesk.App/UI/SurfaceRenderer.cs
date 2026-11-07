@@ -144,7 +144,7 @@ public sealed class SurfaceRenderer : IDisposable
         double scale = m.CellWidth / (double)Math.Max(1, s.CellWidth);
         int radius = Math.Max(0, (int)Math.Round(s.CornerRadius * scale));
         var bodyColor = ColorUtil.Parse(fence.Color ?? s.FenceColor, Color.FromArgb(140, 30, 30, 30));
-        var titleColor = ColorUtil.Parse(s.TitleBarColor, Color.FromArgb(180, 20, 20, 20));
+        var titleColor = ColorUtil.Parse(fence.TitleColor ?? s.TitleBarColor, Color.FromArgb(180, 20, 20, 20));
         if (frame.HoverFenceId == fence.Id) titleColor = ColorUtil.Lighter(titleColor, 18);
         var titleBar = FenceLayoutEngine.TitleBar(fence, m);
 

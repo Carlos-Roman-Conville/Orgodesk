@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Drawing.Text;
 using System.Windows.Forms;
+using Orgodesk.Core.Fences;
 using Orgodesk.Core.Persistence;
 using Orgodesk.Core.Rules;
 using Orgodesk.Windows.Desktop;
@@ -15,6 +16,9 @@ public sealed class SettingsForm : Form
     private readonly DesktopSurface _surface;
 
     // Appearance
+    private const string AllOrgos = "All Orgos (default colors)";
+    private readonly ComboBox _colorTarget = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 260 };
+    private readonly Button _resetColors = new() { Text = "Back to default colors", AutoSize = true, Visible = false };
     private readonly ColorPicker _fenceColor = new();
     private readonly ColorPicker _titleColor = new();
     private readonly ColorPicker _labelColor = new();
@@ -99,6 +103,11 @@ public sealed class SettingsForm : Form
     {
         var page = new TabPage("Appearance") { AutoScroll = true };
         var t = Grid();
+        var targetRow = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
+        targetRow.Controls.AddRange(new Control[] { _colorTarget, _resetColors });
+        Row(t, "Colors apply to", targetRow);
+        _colorTarget.SelectedIndexChanged += (_, _) => LoadColorsForTarget();
+        _resetColors.Click += (_, _) => ResetTargetColors();
         Row(t, "Orgo color", _fenceColor);
         Row(t, "Title bar color", _titleColor);
         Row(t, "Label color", _labelColor);
@@ -181,8 +190,8 @@ public sealed class SettingsForm : Form
     private void LoadValues()
     {
         var s = _model.Settings;
-        _fenceColor.Value = s.FenceColor;
-        _titleColor.Value = s.TitleBarColor;
+        FillColorTargets();
+        LoadColorsForTarget();
         _labelColor.Value = s.LabelColor;
         _selectionColor.Value = s.SelectionColor;
         _font.SelectedItem = _font.Items.Contains(s.LabelFont) ? s.LabelFont : "Segoe UI";
@@ -206,10 +215,52 @@ public sealed class SettingsForm : Form
         RefreshFenceList();
     }
 
-    /// <summary>Redraws the rules list (fence titles may have changed).</summary>
+    private sealed record FenceEntry(string Id, string Title) { public override string ToString() => Title; }
+
+    /// <summary>The fence the color pickers edit, or null for the global defaults.</summary>
+    private Fence? TargetFence => _colorTarget.SelectedItem is FenceEntry e ? _model.Layout.FindFence(e.Id) : null;
+
+    private void FillColorTargets()
+    {
+        var keep = (_colorTarget.SelectedItem as FenceEntry)?.Id;
+        _colorTarget.BeginUpdate();
+        _colorTarget.Items.Clear();
+        _colorTarget.Items.Add(AllOrgos);
+        foreach (var f in _model.Layout.AllFences.OrderBy(f => f.Title, StringComparer.CurrentCultureIgnoreCase))
+            _colorTarget.Items.Add(new FenceEntry(f.Id, f.Title));
+        _colorTarget.SelectedIndex = 0;
+        if (keep != null)
+            for (int i = 1; i < _colorTarget.Items.Count; i++)
+                if (_colorTarget.Items[i] is FenceEntry e && e.Id == keep) { _colorTarget.SelectedIndex = i; break; }
+        _colorTarget.EndUpdate();
+    }
+
+    private void LoadColorsForTarget()
+    {
+        var s = _model.Settings;
+        var f = TargetFence;
+        _fenceColor.Value = f?.Color ?? s.FenceColor;
+        _titleColor.Value = f?.TitleColor ?? s.TitleBarColor;
+        _resetColors.Visible = f != null;
+        _resetColors.Enabled = f != null && (f.Color != null || f.TitleColor != null);
+    }
+
+    private void ResetTargetColors()
+    {
+        var f = TargetFence;
+        if (f == null) return;
+        f.Color = null;
+        f.TitleColor = null;
+        LoadColorsForTarget();
+        _surface.SaveSoon();
+        _surface.RequestRender();
+    }
+
+    /// <summary>Redraws the rules list and the color target list (fence titles may have changed).</summary>
     public void RefreshFenceList()
     {
         if (IsDisposed) return;
+        FillColorTargets();
         _rules.BeginUpdate();
         _rules.Items.Clear();
         foreach (var r in _ruleList)
@@ -272,8 +323,19 @@ public sealed class SettingsForm : Form
     private void Apply()
     {
         var s = _model.Settings;
-        s.FenceColor = _fenceColor.Value;
-        s.TitleBarColor = _titleColor.Value;
+        var target = TargetFence;
+        if (target != null)
+        {
+            // Only the chosen Orgo changes; the defaults stay as they are.
+            target.Color = _fenceColor.Value;
+            target.TitleColor = _titleColor.Value;
+            _resetColors.Enabled = true;
+        }
+        else
+        {
+            s.FenceColor = _fenceColor.Value;
+            s.TitleBarColor = _titleColor.Value;
+        }
         s.LabelColor = _labelColor.Value;
         s.SelectionColor = _selectionColor.Value;
         s.LabelFont = _font.SelectedItem as string ?? "Segoe UI";

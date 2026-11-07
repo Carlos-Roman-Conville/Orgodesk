@@ -81,6 +81,9 @@ Command-line switches:
   clone waits in the tray; double right-click again (or tray > *Switch off*) brings it back with the same layout.
 - **Folder portal:** a fence that shows the contents of any folder (right-click > *New folder portal here*, or set
   the portal folder in fence properties). Dropping files on a portal moves them into that folder.
+- **Colors per Orgo:** Settings > Appearance > *Colors apply to* picks one Orgo (or all); the Orgo and title bar
+  colors then change only that one, and *Back to default colors* clears its override. Right-click > *Orgo
+  properties...* has the same two colors.
 - **Presets:** arrange the desktop, then right-click > *Presets* > *Save current desktop as preset...* and name
   it (Development, Gaming, Office...). Switch with right-click > *Presets* > name: the fences and icon positions
   change, files never move. Icons that appeared since the preset was saved go to free slots. *Update "name" from
