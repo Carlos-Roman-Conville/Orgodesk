@@ -53,6 +53,7 @@ internal static class Program
         using var mutex = new Mutex(true, MutexName, out bool first);
         if (!first)
         {
+            Log.Info("Second copy started while one is running; closing it");
             MessageBox.Show("Orgodesk is already running. Use its tray icon.", "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return 0;
         }
@@ -67,10 +68,12 @@ internal static class Program
             try { DesktopWindows.SetDesktopIconsVisible(true); TrayContext.ClearHiddenFlag(); } catch { }
         };
 
+        Log.Info($"Started (pid {Environment.ProcessId}){(args.Length > 0 ? " args: " + string.Join(' ', args) : "")}");
         var store = new LayoutStore(LayoutStore.DefaultRoot);
         using var context = new TrayContext(store);
         if (!context.Start()) return 2;
         Application.Run(context);
+        Log.Info("Exited");
         return 0;
     }
 }

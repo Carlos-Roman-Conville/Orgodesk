@@ -47,8 +47,12 @@ public sealed class TrayContext : ApplicationContext
     /// <summary>Hides the real desktop icons and attaches the surface. False if the desktop could not be found.</summary>
     public bool Start()
     {
+        // At login Explorer can take a while to build the desktop window. Wait for it instead of giving up.
+        var waited = WaitForDesktop(TimeSpan.FromSeconds(120));
+        if (waited.TotalSeconds >= 1) Log.Info($"Desktop window ready after {waited.TotalSeconds:0} s");
         if (!_surface.Attach())
         {
+            Log.Error($"Desktop window not found after waiting {waited.TotalSeconds:0} s; not starting");
             MessageBox.Show("Could not find the Windows desktop window (SHELLDLL_DefView). Is Explorer running?",
                 "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
@@ -79,6 +83,23 @@ public sealed class TrayContext : ApplicationContext
             try { _surface.BeginInvoke(new Action(Exit)); } catch { }
         }, null, -1, executeOnlyOnce: true);
         return true;
+    }
+
+    /// <summary>Waits until Explorer's desktop window and its icon list exist. Returns how long that took.</summary>
+    private static TimeSpan WaitForDesktop(TimeSpan limit)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        while (sw.Elapsed < limit)
+        {
+            var dv = DesktopWindows.FindDefView();
+            if (dv != IntPtr.Zero && DesktopWindows.FindListView(dv) != IntPtr.Zero)
+            {
+                if (sw.Elapsed.TotalSeconds >= 1) Thread.Sleep(2000); // let Explorer finish filling the desktop
+                return sw.Elapsed;
+            }
+            Thread.Sleep(500);
+        }
+        return sw.Elapsed;
     }
 
     private ContextMenuStrip BuildTrayMenu()
