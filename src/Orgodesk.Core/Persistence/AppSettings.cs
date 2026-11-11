@@ -30,7 +30,9 @@ public sealed class AppSettings
     public int SnapDistance { get; set; } = 12;
     public bool EnablePages { get; set; } = false;
     public int PageSwipeThreshold { get; set; } = 120;
-    public bool StartWithWindows { get; set; }
+    // Defaults to on: Orgodesk syncs the Run value to this at every start, so a lost settings.json must not
+    // silently remove the start-with-Windows entry that --install wrote (FC-26). An explicit false is kept.
+    public bool StartWithWindows { get; set; } = true;
     public bool ShowPageIndicator { get; set; } = true;
 
     public AppSettings Clone() => (AppSettings)MemberwiseClone();

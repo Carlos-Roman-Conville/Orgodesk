@@ -44,7 +44,7 @@ public sealed class DesktopModel : IDisposable
     /// <summary>Re-reads the desktop. Returns the facts for reconciliation.</summary>
     public List<ItemFacts> RefreshDesktop()
     {
-        var fresh = ShellEnumerator.EnumerateDesktop();
+        var fresh = ShellEnumerator.EnumerateDesktop(PlacedKeys());
         foreach (var old in DesktopItems.Values) old.Dispose();
         DesktopItems.Clear();
         foreach (var it in fresh)
@@ -53,6 +53,18 @@ public sealed class DesktopModel : IDisposable
             DesktopItems[it.Key] = it;
         }
         return DesktopItems.Values.Select(i => i.ToFacts()).ToList();
+    }
+
+    /// <summary>Every item key placed in an Orgo or on the desktop, in any page or preset.</summary>
+    private HashSet<string> PlacedKeys()
+    {
+        var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var page in Layout.Pages.Concat(Layout.Presets))
+        {
+            foreach (var k in page.FreeItems.Keys) keys.Add(k);
+            foreach (var f in page.Fences) if (!f.IsPortal) foreach (var k in f.Items) keys.Add(k);
+        }
+        return keys;
     }
 
     /// <summary>Re-reads every portal folder in the layout.</summary>

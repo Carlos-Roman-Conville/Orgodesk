@@ -124,4 +124,20 @@ public class LayoutStoreTests : IDisposable
         Assert.Equal("#11223344", back.FenceColor);
         Assert.True(back.StartWithWindows);
     }
+
+    [Fact]
+    public void Settings_MissingFile_KeepsStartWithWindowsOn()
+    {
+        // FC-26: a lost settings.json must not turn start-with-Windows off (the Run value is synced to it at start).
+        var back = new LayoutStore(_root).LoadSettings();
+        Assert.True(back.StartWithWindows);
+    }
+
+    [Fact]
+    public void Settings_StartWithWindowsOff_IsKept()
+    {
+        var store = new LayoutStore(_root);
+        store.SaveSettings(new AppSettings { StartWithWindows = false });
+        Assert.False(store.LoadSettings().StartWithWindows);
+    }
 }

@@ -32,21 +32,56 @@ public static class ShellEnumerator
         return pidl;
     }
 
-    /// <summary>Everything the real desktop would show, honoring the hidden-file and desktop-icon settings.</summary>
-    public static List<ShellItemInfo> EnumerateDesktop()
+    /// <summary>
+    /// Everything the real desktop would show, honoring the hidden-file and desktop-icon settings.
+    /// Items in <paramref name="placed"/> (already in an Orgo or on the desktop in some page or preset) are always kept,
+    /// so a user who put Home or Gallery into an Orgo keeps them.
+    /// </summary>
+    public static List<ShellItemInfo> EnumerateDesktop(ISet<string>? placed = null)
     {
         var folder = DesktopFolder;
         var items = Enumerate(folder, IntPtr.Zero, HiddenFlags());
         var hidden = HiddenDesktopIcons();
         items.RemoveAll(i =>
         {
+            if (placed != null && placed.Contains(i.Key)) return false;
             if (!i.Key.StartsWith("::", StringComparison.Ordinal)) return false;
             var clsid = i.Key.Substring(2);
             if (hidden.TryGetValue(clsid, out var isHidden)) { if (isHidden) { i.Dispose(); return true; } return false; }
             if (DefaultSpecialVisible.TryGetValue(clsid, out var shown) && !shown) { i.Dispose(); return true; }
             return false;
         });
+
+        // FC-25: the desktop root also returns navigation-pane items (Home, Gallery, Libraries, user folders, drives...).
+        // Keep only what Explorer's own desktop shows, plus files in the desktop folders (so a file created a moment ago
+        // is never dropped while Explorer's view catches up), plus anything already placed.
+        // If Explorer's view can't be read, keep everything, as before.
+        var explorer = ExplorerDesktopView.VisibleKeys();
+        if (explorer != null)
+        {
+            var desktopDirs = DesktopDirectories();
+            items.RemoveAll(i =>
+            {
+                if (placed != null && placed.Contains(i.Key)) return false;
+                if (explorer.Contains(i.Key)) return false;
+                if (i.Path != null && desktopDirs.Contains(System.IO.Path.GetDirectoryName(i.Path.TrimEnd('\\')) ?? "")) return false;
+                if (i.Key.StartsWith("::", StringComparison.Ordinal) && DefaultSpecialVisible.ContainsKey(i.Key.Substring(2))) return false;
+                i.Dispose();
+                return true;
+            });
+        }
         return items;
+    }
+
+    private static HashSet<string> DesktopDirectories()
+    {
+        var dirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var f in new[] { Environment.SpecialFolder.DesktopDirectory, Environment.SpecialFolder.CommonDesktopDirectory })
+        {
+            var d = Environment.GetFolderPath(f);
+            if (!string.IsNullOrEmpty(d)) dirs.Add(d.TrimEnd('\\'));
+        }
+        return dirs;
     }
 
     /// <summary>The items of a filesystem folder, as a portal shows them.</summary>
