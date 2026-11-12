@@ -14,7 +14,7 @@ app actually does (checked in the code). Whether a lawyer reviews them before re
 
 | Blank | Where | Notes |
 |---|---|---|
-| `[SELLER LEGAL NAME]` | all three | Your own name, or CRC Solutions if it sells this. |
+| Seller name | all three | **Filled 2026-11-12: CRC Solutions** (Rex's decision; a separate software name can come later). If CRC Solutions is not a registered company, the accurate form is "<your name>, doing business as CRC Solutions": change it before release. |
 | `[STATE]` | EULA, PRIVACY | The US state whose law governs (where you or the business are based). |
 | `[SUPPORT EMAIL]` | all three, README-buyers.txt, Sales.cs | One address you will actually read. |
 | `[DATE]` | all three | The day the product page goes live. |

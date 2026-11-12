@@ -128,7 +128,7 @@ public static class Installer
             var version = typeof(Installer).Assembly.GetName().Version;
             k.SetValue("DisplayName", "Orgodesk");
             k.SetValue("DisplayVersion", version == null ? "1.0.0" : $"{version.Major}.{version.Minor}.{version.Build}");
-            k.SetValue("Publisher", "Orgodesk");
+            k.SetValue("Publisher", "CRC Solutions");
             k.SetValue("DisplayIcon", InstalledExe);
             k.SetValue("InstallLocation", InstallDir);
             k.SetValue("UninstallString", $"\"{InstalledExe}\" --uninstall");

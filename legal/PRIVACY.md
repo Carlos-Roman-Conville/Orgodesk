@@ -3,7 +3,7 @@
 *Draft, not yet reviewed by a lawyer. Effective date: [DATE].*
 
 This policy covers the Orgodesk desktop program and its sale. The seller and data controller is
-[SELLER LEGAL NAME], [STATE], USA. Contact: [SUPPORT EMAIL].
+CRC Solutions, [STATE], USA. Contact: [SUPPORT EMAIL].
 
 ## The short version
 
