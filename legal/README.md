@@ -16,7 +16,7 @@ app actually does (checked in the code). Whether a lawyer reviews them before re
 |---|---|---|
 | Seller name | all three | **Filled 2026-11-12: CRC Solutions** (Rex's decision; a separate software name can come later). If CRC Solutions is not a registered company, the accurate form is "<your name>, doing business as CRC Solutions": change it before release. |
 | `[STATE]` | EULA, PRIVACY | The US state whose law governs (where you or the business are based). |
-| Support email | all three, README-buyers.txt, Sales.cs | **Filled 2026-11-12: support@crc-solutions.org**, to be forwarded free to Rex's Gmail by Cloudflare Email Routing (the paid Google Workspace mailbox lapsed in September 2026). Do not release until a test message to it arrives. |
+| Support email | all three, README-buyers.txt, Sales.cs | **Filled 2026-11-12: support@crc-solutions.org**, forwarded free to Rex's Gmail by Cloudflare Email Routing (the paid Google Workspace mailbox lapsed in September 2026). **Working 2026-11-12:** MX and SPF point at Cloudflare, routing Enabled, and a test message shows as received and forwarded in Cloudflare's log. The test was sent from the same Gmail it forwards to, and Gmail hides its own returning copy, so before release send one from a different account and see it land in the inbox. Replies go out from the Gmail address unless "Send mail as" is set up. No DMARC record on the domain yet. |
 | `[DATE]` | all three | The day the product page goes live. |
 | `[2]` years for support emails | PRIVACY | Change if you keep them longer or shorter. |
 | Update emails | PRIVACY ("Your purchase") | Say yes or no to emailing buyers about new versions. |
