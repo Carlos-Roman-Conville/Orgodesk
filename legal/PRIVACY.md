@@ -3,7 +3,8 @@
 *Draft for [SELLER LEGAL NAME] to review. Last updated [DATE].*
 
 **What stays on your PC.** Orgodesk keeps your layout (Orgos, presets, pages), settings, license record and an error log
-in `%APPDATA%\orgodesk` on your computer. None of it is sent anywhere.
+in `%APPDATA%\orgodesk` on your computer, and a scrambled fingerprint (hash) of your license key in the Windows
+registry under `HKCU\Software\Orgodesk`, so reinstalling doesn't use up another activation. None of it is sent anywhere.
 
 **What is sent, and why.** To check your license, Orgodesk sends your **license key** and Orgodesk's **product id** to
 Gumroad's license service (`api.gumroad.com`) when you activate a key and about once a week afterwards. Gumroad replies

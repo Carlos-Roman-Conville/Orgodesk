@@ -14,4 +14,5 @@ Facts the drafts rely on (re-check them if the code changes):
 - Layout, settings, license record and logs are stored only in `%APPDATA%\orgodesk` on the user's PC.
 - The only network traffic is the license check: the license key and product id go to `api.gumroad.com` when a key is
   activated and about once a week after that. No analytics, no crash upload, no ads.
+- A hash of the license key is kept in `HKCU\Software\Orgodesk` (local only, survives uninstall on purpose).
 - A key works on up to 5 PCs (`SalesConfig.MaxActivations`); 14-day trial; 30 days offline before a recheck is needed.

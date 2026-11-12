@@ -78,9 +78,13 @@ public sealed class LicenseForm : Form
         _activate.Enabled = false;
         _result.ForeColor = SystemColors.ControlText;
         _result.Text = "Checking...";
-        var res = await new GumroadVerifier(_cfg).VerifyAsync(key, activate: key != _record.Key || _record.LastVerifiedUtc == null);
+        // Count an activation only the first time this key is activated on this Windows account (FC-40):
+        // a reinstall or a deleted data folder on the same PC must not use up another one.
+        bool activate = (key != _record.Key || _record.LastVerifiedUtc == null) && !ActivationMarker.Has(key);
+        var res = await new GumroadVerifier(_cfg).VerifyAsync(key, activate);
         var now = DateTime.UtcNow;
         GumroadVerifier.Apply(_record, key, res, now);
+        if (res.Outcome == VerifyOutcome.Valid) ActivationMarker.Set(key);
         try { _store.Save(_record); } catch (Exception ex) { Log.Error("Could not save license.json", ex); }
         Status = LicenseRules.Evaluate(_record, _cfg, now);
         _result.Text = res.Message;

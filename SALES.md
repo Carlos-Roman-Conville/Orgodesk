@@ -12,7 +12,9 @@ Written 2026-11-11 for the 10-day push (see the 10-Day Money Guide).
   in `%APPDATA%\orgodesk` and come back as soon as a key is entered.
 - **Key check:** the key from the Gumroad receipt goes into the license window (tray > License...). Orgodesk
   asks Gumroad's license API (`api.gumroad.com/v2/licenses/verify`) once, which counts one activation. The limit is
-  **5 PCs per key**.
+  **5 PCs per key**. Activating the same key again on the same Windows account (after a reinstall, or after
+  deleting the data folder) does not count: Orgodesk remembers a hash of the key in `HKCU\Software\Orgodesk`.
+  A fresh Windows install or a new user account does count.
 - **Rechecks:** about once a week in the background. **Offline is fine for 30 days** after the last successful check.
   A refunded, charged-back or disputed purchase stops working at the next recheck.
 - **Setting the clock back** doesn't extend the trial (the app remembers the latest time it has seen).
@@ -22,6 +24,32 @@ Written 2026-11-11 for the 10-day push (see the 10-Day Money Guide).
   and stronger protection isn't worth the time this week.
 - Code: `src/Orgodesk.Core/Licensing/` (rules, store, Gumroad check), `src/Orgodesk.App/UI/LicenseForm.cs`,
   the gate in `Program.cs`, the tray entries in `TrayContext.cs`. Tests: `tests/Orgodesk.Core.Tests/LicensingTests.cs`.
+
+## Activation limits: what's standard, and what Orgodesk does
+
+Researched 2026-11-12. There is no formal standard; the common pattern among license vendors is:
+
+- **A cap of 2 to 5 devices per key** for consumer software (examples seen: 3 and 5). Orgodesk uses 5.
+- **Self-service deactivation**, so a buyer can free a slot when they replace a PC, with "contact support to reset" as the fallback.
+- **Routine checks don't use up activations**; only a new device does.
+- **A clear message at the limit** that says what to do.
+
+Gumroad's counter can't do all of that: it is one global number per key, it can't tell PCs apart, and lowering it needs
+your Gumroad access token, which must never be put inside the app. So Orgodesk does this:
+
+| Standard practice | Orgodesk |
+|---|---|
+| 2 to 5 devices | 5 activations per key |
+| Rechecks are free | Weekly rechecks never count |
+| Same device is free | Re-activating on the same Windows account never counts (local key hash) |
+| Self-service deactivation | Not possible with Gumroad alone: **support reset** instead (below) |
+| Clear message at the limit | "This key has been activated N times; the limit is 5 PCs. Contact support to reset it." |
+
+**Support reset (when a buyer hits the limit):** check their receipt email matches the sale in Gumroad, then lower the
+count with Gumroad's API: `PUT https://api.gumroad.com/v2/licenses/decrement_uses_count` with your access token,
+the `product_id` and their `license_key` (once per slot to free). Gumroad can't set the count straight to zero. Keep the
+access token out of the repo. If resets become frequent, the next step is a small activation server that tracks devices,
+which is what makes true self-service deactivation possible.
 
 ## Your steps (things only you can do)
 
