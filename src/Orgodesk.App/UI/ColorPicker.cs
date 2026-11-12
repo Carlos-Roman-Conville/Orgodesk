@@ -32,6 +32,7 @@ public sealed class ColorPicker : FlowLayoutPanel
         Controls.Add(_alpha);
     }
 
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]   // runtime-only value (WFO1000, .NET 10)
     public string Value
     {
         get => ColorUtil.ToHex(Color.FromArgb((int)_alpha.Value, _rgb));

@@ -22,7 +22,7 @@ Fences (3 and later) takes over icon rendering instead of moving Explorer's icon
 ## Requirements
 
 - Windows 11, 64-bit (Windows 10 is not supported). Tested on Windows 11 builds 26200 and 26300.
-- .NET 8 SDK to build (`dotnet --version`), or the .NET 8 Desktop Runtime to run a published build.
+- .NET 10 SDK to build (`dotnet --version`), or the .NET 10 Desktop Runtime to run a published build.
 - **Exit Stardock Fences first** if it is installed. Both programs take over the same desktop; running both at once
   makes them fight over the icon list. (Fences also leaves a hook DLL inside Explorer until Explorer restarts.)
 
@@ -50,7 +50,7 @@ or by hand:
 
 ```bat
 dotnet build Orgodesk.sln
-start "" src\Orgodesk.App\bin\Debug\net8.0-windows\Orgodesk.exe
+start "" src\Orgodesk.App\bin\Debug\net10.0-windows\Orgodesk.exe
 ```
 
 Tests:
@@ -119,7 +119,7 @@ set at 96 dpi and scaled per monitor.
 
 | Project | Folder | What |
 |---|---|---|
-| `Orgodesk.Core` (net8.0, no UI) | `Fences/` | Models (`Layout`, `Page`, `Fence`), grid layout engine, free-icon grid, reconciler (keeps the layout in step with the real desktop). |
+| `Orgodesk.Core` (net10.0, no UI) | `Fences/` | Models (`Layout`, `Page`, `Fence`), grid layout engine, free-icon grid, reconciler (keeps the layout in step with the real desktop). |
 | | `Rules/` | Rule model and matcher. |
 | | `Persistence/` | JSON store with atomic writes, snapshots, settings. |
 | `Orgodesk.Windows` | `Shell/` | COM interop: enumeration, icons, context menus, drag data objects, file operations, change notifications. |

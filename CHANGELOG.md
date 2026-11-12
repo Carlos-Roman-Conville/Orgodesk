@@ -12,6 +12,12 @@ Work toward the first public release, 1.0.0. The version number in `Orgodesk.App
 - The layout records the display scale it was laid out at, and converts when the scale changes.
 - `THIRD-PARTY-NOTICES.txt` for the bundled .NET runtime and Windows Forms.
 
+### Changed
+- Built on .NET 10 (was .NET 8, whose support ended 2026-11-10). The download is smaller (about 107 MB, was 145 MB).
+- The tray menu shows the version.
+- Windows 11 only; Windows 10 is not supported.
+- Uninstall from Settings > Apps removes the program; it asks whether to keep your Orgos.
+
 ### Fixed
 - A paying buyer was locked out after the PC clock had once been set to a future date (a successful key check now resets the clock guard) (FC-36).
 - Dialogs (license, settings, snapshots, rule edit, Orgo properties) were clipped at 125–200% display scaling (FC-35).

@@ -27,7 +27,7 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | 2a | Functional: happy path | PARTIAL | Presets switch (FC-20 test), Orgo create/move/resize/roll-up verified by Rex 2026-11-06 (FC-7). Not yet re-run on the RC. |
 | 2b | Boundaries | PARTIAL | ~180 icons on Rex's PC (Organized preset scroll fix). Empty desktop and one icon not tried. |
 | 2c | Invalid / odd input | PASS | `[edge-odd-names]`: emoji, accents, 180-char name, no extension, leading dot, quotes, brackets, odd folder: all kept in layout, no errors. Emoji label draws as a box (FC-30, Low). |
-| 3 | Automated tests | PASS | 69 of 69 (2026-11-12, includes the licensing tests and the new FC-31/FC-36 tests). |
+| 3 | Automated tests | PASS | 69 of 69 on .NET 10 (2026-11-12). |
 | 4 | Confirmation + regression | PASS | FC-25 and FC-26 retested in VM (`[fix-*]` lines, 16:51–16:52); install, presets, reinstall rerun. |
 | 5 | Clean-machine run | PASS | Fresh Windows 11 VM, standard user. |
 | 6a | Save, close, reopen | PASS | `[seed-presets]` 15:56: presets kept after Orgodesk saves. |
@@ -76,6 +76,11 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | P12 | EULA, refund, privacy policy | DRAFTED | `legal/EULA.md`, `PRIVACY.md`, `REFUNDS.md` written from what the code does (key + product id to Gumroad, nothing else). Rex fills [brackets] (name, state, refund window, support email) and decides on a lawyer. EULA ships as EULA.txt. |
 | P13 | Paid features: trial, keys, PC limit, offline, clock, refund | PARTIAL | VM 2026-11-12 with a test-only product id: trial start, 2 days left, trial ended (window before desktop), wrong key, no internet, clock back, close exits: all PASS; license window at 150% fixed (FC-35); future-clock lockout fixed (FC-36). Needs Rex's Gumroad product: valid key, 6th PC, refund. |
 | P14 | Support path, watch period | NOT DONE | SupportEmail empty in Sales.cs. |
+| P15 | Runtime and OS in support; app shows its version | PASS (after fix) | 2026-11-12: moved from .NET 8 (support ended 2026-11-10) to .NET 10.0.15 (supported to Nov 2028), built with SDK 10.0.404 kept in `Toolchain\dotnet10\sdk` (Microsoft zip, SHA-512 verified). 69 of 69 tests pass on .NET 10; VM regression on the .NET 10 build: install, data, edge and paid-version stages pass. Tray menu now shows "Orgodesk 1.0.0". Still open: publisher name in the exe (Rex picks the name); real-mouse recheck on .NET 10 at the RC. The seller must rebuild when .NET 10 gets security fixes. |
+| P16 | Bare exe and zip scanned (Defender + VirusTotal) | NOT DONE | Do at the RC, after the .NET 10 move. |
+| P17 | Tax, EU withdrawal consent, name search | PARTIAL | Gumroad is merchant of record (EU/UK VAT certain; Rex confirms US sales tax on Gumroad's tax page). Web search 2026-11-12 found no product or mark named "Orgodesk"; nearest is a registered Class 9 mark "ORGO" (Rex decides whether to check USPTO/EUIPO himself or with a lawyer). Refund draft doesn't undercut EU rights. |
+| P18 | Repo visibility decided; no secrets | **NEEDS DECISION** | The GitHub repo is PUBLIC and has no license file: the full source, the license check and SALES.md (launch plan) are readable by anyone, and a development build has no trial or key. No secrets are in it (product id empty). Rex decides: make it private, or keep it public on purpose. |
+| P19 | Update notice, 2FA, backups | NOT DONE | No written way to tell buyers about a fix yet (Gumroad can email customers); account 2FA and off-PC backup are Rex's to confirm. |
 | **GO / NO-GO** | | **NO-GO** | Open items above. |
 
 ### Gaps to close before release (in order)
@@ -99,3 +104,5 @@ Fixes: FC-30 (emoji labels), FC-31 (failed save shown), FC-35 (dialogs at 150%),
 Round 2 continued (2026-11-12, later): Windows 10 dropped (Rex). Built: real uninstaller + Settings > Apps entry, first-run install offer for sold builds, README-buyers.txt, legal drafts. FC-9 still needs a real mouse.
 
 Round 2, late (2026-11-12 01:20–02:05): real-mouse session in the VM. FC-9 keyboard PASS. Found FC-38 (Orgodesk dialogs could leave Explorer's desktop disabled) and fixed it; Orgo properties and Rule edit were clipped even at 100% and Settings ran behind the taskbar on a small screen: fixed; uninstaller left an empty program folder: fixed. New 8-hour soak started 02:02 on the installed sold-test build.
+
+Round 3 (2026-11-12 03:20–03:35): moved to .NET 10. Regression in the VM on the .NET 10 build: fix-tests (fresh install, placed kept, data deleted), edge-tests (odd names, damaged layout and settings, 20 kills, failed save) and lic-tests (trial start, near end, expired, clock back, close exits) all pass; the FAIL lines in results.log for odd names and "only what Windows shows" are test-script artifacts, checked by hand (8 of 8 files in the layout, no unplaced navigation items). The first soak (on .NET 8, stopped at 80 min for the move) rose from 78.6 to 85.1 MB; a new 8-hour soak on the .NET 10 build started 03:30.

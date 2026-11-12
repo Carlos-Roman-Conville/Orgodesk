@@ -3,7 +3,7 @@
 ## What this is
 
 Orgodesk (formerly Fences Clone), a personal desktop organizer in the style of Stardock Fences: fences, roll-up, quick-hide, folder portals, desktop pages, auto-sort rules
-and snapshots, as a C# .NET 8 app that takes over desktop icon rendering. Being prepared for sale on Gumroad with a 14-day trial ([SALES.md](SALES.md)); not released until the production gate in [TESTING.md](TESTING.md) says GO.
+and snapshots, as a C# .NET 10 app that takes over desktop icon rendering. Being prepared for sale on Gumroad with a 14-day trial ([SALES.md](SALES.md)); not released until the production gate in [TESTING.md](TESTING.md) says GO.
 
 ## What's under it
 

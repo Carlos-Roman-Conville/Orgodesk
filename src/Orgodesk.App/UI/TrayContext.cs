@@ -142,6 +142,8 @@ public sealed class TrayContext : ApplicationContext
             menu.Items.Add("Refresh icons", null, (_, _) => { _model.Icons.Clear(); _surface.RefreshDesktop(); });
             menu.Items.Add(new ToolStripSeparator());
             if (lic.State != LicenseState.DevBuild) menu.Items.Add("License...", null, (_, _) => ShowLicense());
+            var ver = typeof(TrayContext).Assembly.GetName().Version;
+            menu.Items.Add(new ToolStripMenuItem($"Orgodesk {ver?.Major}.{ver?.Minor}.{ver?.Build}") { Enabled = false });   // so a support message can name the build
             menu.Items.Add("Open settings folder", null, (_, _) => Windows.Shell.ShellActions.OpenPath(_store.RootDir, IntPtr.Zero));
             menu.Items.Add("Exit (restore desktop icons)", null, (_, _) => Exit());
         };
