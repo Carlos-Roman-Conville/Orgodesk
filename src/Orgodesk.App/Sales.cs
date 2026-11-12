@@ -12,7 +12,7 @@ internal static class Sales
 {
     public const string ProductId = "";
     public const string BuyUrl = "";
-    public const string SupportEmail = "";
+    public const string SupportEmail = "support@crc-solutions.org";
 
     public static readonly SalesConfig Config = new(ProductId, BuyUrl);
 }

@@ -90,4 +90,4 @@ comes with the copy you install applies to that copy.
 
 ## 14. Contact
 
-[SUPPORT EMAIL]
+support@crc-solutions.org

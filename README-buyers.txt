@@ -22,4 +22,4 @@ Your files stay where they are: Orgodesk only changes how the desktop shows them
 Your layout and settings are kept in %APPDATA%\orgodesk.
 
 License terms: EULA.txt. Open-source parts: THIRD-PARTY-NOTICES.txt.
-Support: [SUPPORT EMAIL]
+Support: support@crc-solutions.org

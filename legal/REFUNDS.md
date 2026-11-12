@@ -9,7 +9,7 @@ Orgodesk also has a free, fully unlocked 14-day trial, so you can check it on yo
 
 ## How to ask
 
-Reply to your Gumroad receipt email, or write to [SUPPORT EMAIL] with the email address you bought with. Refunds go
+Reply to your Gumroad receipt email, or write to support@crc-solutions.org with the email address you bought with. Refunds go
 back to your original payment method through Gumroad, usually within a few business days.
 
 ## If Windows won't let it run

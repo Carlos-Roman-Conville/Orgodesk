@@ -3,7 +3,7 @@
 *Draft, not yet reviewed by a lawyer. Effective date: [DATE].*
 
 This policy covers the Orgodesk desktop program and its sale. The seller and data controller is
-CRC Solutions, [STATE], USA. Contact: [SUPPORT EMAIL].
+CRC Solutions, [STATE], USA. Contact: support@crc-solutions.org.
 
 ## The short version
 
@@ -64,7 +64,7 @@ message, then deleted. Data on your PC stays until you delete it.
 - **On your PC:** uninstall Orgodesk from Settings > Apps and choose to delete your data, or delete
   `%APPDATA%\orgodesk` and the `HKCU\Software\Orgodesk` registry key yourself.
 - **What we hold:** you can ask us for a copy of the personal data we hold about you, or to correct or delete it, or
-  object to how we use it, by writing to [SUPPORT EMAIL]. We answer within 30 days. We may need to keep purchase
+  object to how we use it, by writing to support@crc-solutions.org. We answer within 30 days. We may need to keep purchase
   records the law requires.
 - **In the EEA or UK** you also have the right to complain to your data protection authority.
 - **California residents:** we do not sell or share personal information as those terms are defined in California law.
