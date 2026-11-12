@@ -49,13 +49,13 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | First run with no data | PASS | `[fix-data-deleted]` |
 | Starts by itself after restart | PASS | VM: 33 s and 47 s after boot (Nov 7 build); 17:01:29 after restart with fresh settings (b4fe73b) |
 | Shows only Windows' own desktop items on a fresh PC | PASS | `[fix-fresh-install]`; `shots/fix-placed-kept.png` (placed items kept) |
-| Uninstall leaves nothing behind | BUILT, VM TEST PENDING | 2026-11-12: real uninstaller. Install registers Orgodesk in Settings > Apps; uninstall removes the startup entry, Start Menu entry, Apps entry and program folder, and asks whether to keep the Orgos (kept by default; `--quiet` keeps them without asking). Sold builds offer to install themselves on first run. VM test after the soak ends (it would stop Orgodesk mid-soak). |
+| Uninstall leaves nothing behind | PASS | 2026-11-12 VM: uninstall (from the installed copy, as Settings > Apps runs it) removes the program folder, startup entry, Settings > Apps entry and Start Menu shortcut; asks about data (No = keep, default) and keeps it. Install offer from Downloads: Yes installs, registers Orgodesk 1.0.0 in Settings > Apps, starts the trial, and the kept Orgos come back. |
 | Upgrade over previous version keeps data | PASS | Rex's PC, Nov 7 build to b4fe73b |
 | Delete program folder + reinstall keeps data | PASS | `[reinstall]` 15:57 |
 | Resolution change while running | PASS | 1024×768 → 800×600 → back; Orgos stay on screen. Icon landing on another (FC-33) fixed: stacked icons spread out after a display change. |
 | Second monitor | PASS | Orgo on monitor 2 draws there; unplugging monitor 2 pulls it back onto monitor 1 (FC-34). Doesn't return to monitor 2 when replugged. |
-| 150% display scaling | PASS (after fix) | Fix build: 100% → 150% at 1024×768, 11 icons in 11 cells, Places scaled (`shots/fix2-150pct-1024.png`). Before the fix labels overlapped (FC-32, fixed). |
-| Keyboard across processes | NOT VERIFIED | FC-9, tried 2026-11-12: input injected inside the VM reaches Windows (the Start menu opens) but Orgodesk did not react to injected clicks at all, so the test can't tell whether real keys work. Needs a real mouse: Rex by hand, or VirtualBox access for Claude (requests came back declined). |
+| 150% display scaling | PASS (after fix) | Dialogs at 150% (real mouse, 2026-11-12): Orgo properties, Settings, Rule edit and License all fit with their buttons visible after the FC-35 fixes. Desktop: Fix build: 100% → 150% at 1024×768, 11 icons in 11 cells, Places scaled (`shots/fix2-150pct-1024.png`). Before the fix labels overlapped (FC-32, fixed). |
+| Keyboard across processes | PASS | FC-9, 2026-11-12 with a real mouse in the VM (150%): click selects; F2 opens the rename box with the name selected; typing + Enter renames (extension kept); Ctrl+A selects every icon including inside Orgos; Esc clears; Delete sends the file to the Recycle Bin; right-click shows the Orgo menu and Windows' item menu. Found and fixed FC-38 on the way (dialogs disabling Explorer's desktop). |
 | Path with spaces / non-English user name | NOT RUN | |
 
 ### Production gate
@@ -97,3 +97,5 @@ VM state after this round: VBoxSVGA graphics, two monitors, test user at 150% sc
 Fixes: FC-30 (emoji labels), FC-31 (failed save shown), FC-35 (dialogs at 150%), FC-36 (paying buyer locked out after a future clock). Version 1.0.0, CHANGELOG.md, THIRD-PARTY-NOTICES.txt. Paid version tested in the VM (FC-37). Exploratory churn session passed. 8-hour soak started 00:37 on the final development build (results in the VM at `C:\orgodesk-test\soak.log` and `[x-soak]` lines).
 
 Round 2 continued (2026-11-12, later): Windows 10 dropped (Rex). Built: real uninstaller + Settings > Apps entry, first-run install offer for sold builds, README-buyers.txt, legal drafts. FC-9 still needs a real mouse.
+
+Round 2, late (2026-11-12 01:20–02:05): real-mouse session in the VM. FC-9 keyboard PASS. Found FC-38 (Orgodesk dialogs could leave Explorer's desktop disabled) and fixed it; Orgo properties and Rule edit were clipped even at 100% and Settings ran behind the taskbar on a small screen: fixed; uninstaller left an empty program folder: fixed. New 8-hour soak started 02:02 on the installed sold-test build.
