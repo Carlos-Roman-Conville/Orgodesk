@@ -13,6 +13,21 @@ public sealed class LayoutStore
     public string LayoutPath => Path.Combine(RootDir, "layout.json");
     public string SettingsPath => Path.Combine(RootDir, "settings.json");
     public string SnapshotsDir => Path.Combine(RootDir, "snapshots");
+    /// <summary>The last layout.json that loaded cleanly, refreshed at every clean load (FC-28).</summary>
+    public string LayoutBackupPath => LayoutPath + ".bak";
+
+    /// <summary>
+    /// Problems met while loading (a damaged file, a restore from backup). The app logs them and tells the user;
+    /// <see cref="TakeLoadProblems"/> returns them once.
+    /// </summary>
+    private readonly List<string> _loadProblems = new();
+
+    public IReadOnlyList<string> TakeLoadProblems()
+    {
+        var list = _loadProblems.ToList();
+        _loadProblems.Clear();
+        return list;
+    }
 
     public LayoutStore(string rootDir)
     {
@@ -39,7 +54,28 @@ public sealed class LayoutStore
 
     public Layout LoadLayout()
     {
-        var l = ReadJson<Layout>(LayoutPath);
+        var l = ReadJson<Layout>(LayoutPath, out var damagedCopy);
+        if (l != null)
+        {
+            // Keep the last good layout so a damaged file can be recovered (FC-28).
+            try { File.Copy(LayoutPath, LayoutBackupPath, overwrite: true); } catch { /* best effort */ }
+        }
+        else if (damagedCopy != null)
+        {
+            var backup = ReadJson<Layout>(LayoutBackupPath, out _);
+            if (backup != null)
+            {
+                l = backup;
+                _loadProblems.Add($"layout.json was damaged and could not be read. Your Orgos were restored from the last good copy " +
+                    $"({File.GetLastWriteTime(LayoutBackupPath):yyyy-MM-dd HH:mm}). The damaged file was kept as {Path.GetFileName(damagedCopy)}.");
+                SaveLayout(l);
+            }
+            else
+            {
+                _loadProblems.Add($"layout.json was damaged and could not be read, and there was no backup to restore, so Orgodesk started " +
+                    $"with an empty layout. The damaged file was kept as {Path.GetFileName(damagedCopy)} in {RootDir}.");
+            }
+        }
         if (l == null) l = new Layout();
         Normalize(l);
         return l;
@@ -53,7 +89,19 @@ public sealed class LayoutStore
 
     // ---- settings ----
 
-    public AppSettings LoadSettings() => ReadJson<AppSettings>(SettingsPath) ?? new AppSettings();
+    public AppSettings LoadSettings()
+    {
+        var s = ReadJson<AppSettings>(SettingsPath, out var damagedCopy);
+        if (s != null) return s;
+        s = new AppSettings();
+        if (damagedCopy != null)
+        {
+            // Write the defaults back so the damaged file isn't copied aside again at every start (FC-29).
+            try { SaveSettings(s); } catch { /* best effort */ }
+            _loadProblems.Add($"settings.json was damaged, so settings were reset to defaults. The damaged file was kept as {Path.GetFileName(damagedCopy)}.");
+        }
+        return s;
+    }
 
     public void SaveSettings(AppSettings settings) => WriteJsonAtomic(SettingsPath, settings);
 
@@ -82,7 +130,7 @@ public sealed class LayoutStore
     public Layout? LoadSnapshot(string name)
     {
         var path = Path.Combine(SnapshotsDir, SanitizeName(name) + ".json");
-        var l = ReadJson<Layout>(path);
+        var l = ReadJson<Layout>(path, out _);
         if (l != null) Normalize(l);
         return l;
     }
@@ -130,8 +178,10 @@ public sealed class LayoutStore
         }
     }
 
-    private T? ReadJson<T>(string path) where T : class
+    /// <summary>Reads a JSON file. A damaged file is copied aside and its copy's path returned in <paramref name="damagedCopy"/>.</summary>
+    private static T? ReadJson<T>(string path, out string? damagedCopy) where T : class
     {
+        damagedCopy = null;
         if (!File.Exists(path)) return null;
         try
         {
@@ -142,7 +192,7 @@ public sealed class LayoutStore
         {
             // Keep the broken file for inspection and start fresh.
             var backup = path + ".corrupt-" + DateTime.Now.ToString("yyyyMMdd-HHmmss");
-            try { File.Copy(path, backup, overwrite: true); } catch { /* best effort */ }
+            try { File.Copy(path, backup, overwrite: true); damagedCopy = backup; } catch { damagedCopy = path; }
             return null;
         }
     }

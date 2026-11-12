@@ -1,0 +1,92 @@
+# Test round: Orgodesk
+
+Follows the standard guide in `E:\AI Programs\HQ\testing\` (BASELINE, SPECIALIZED A, PRODUCTION).
+
+- **Program:** Orgodesk, commit `b4fe73b` (2026-11-11). Paid version (trial and Gumroad license keys) is **in progress** in the working tree, not committed, not yet tested.
+- **Kind:** [x] Windows desktop app  [ ] website  [ ] game  [ ] script  [ ] uses AI models  [x] keeps important data (layouts, presets)
+- **Where tested:** VirtualBox VM `Orgodesk-Test` (Windows 11 Home build 26300, standard local account, fresh install) at `G:\VMs\orgodesk-test\`; Rex's PC (Windows 11 build 26200).
+- **Smoke test steps:**
+  1. Install (`Orgodesk.exe --install`), or start the installed exe.
+  2. Desktop icons appear in Orgodesk's surface; error.log gets a `Started` line.
+  3. Switch to another preset and back; Orgos and icons match.
+  4. Tray > Exit: the process ends and Windows' own icons come back.
+
+## Severity and exit criteria (set 2026-11-11, before any release round)
+
+Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` sections 1 and 2: zero open Critical, zero open Major (or a Rex-approved workaround in the release notes), every Minor and Low listed in Known issues, every fix verified.
+
+---
+
+## Round 1 — 2026-11-11 (VM, commit b4fe73b and the Nov 7 build before it)
+
+### Baseline
+
+| # | Test | Result | Evidence |
+|---|---|---|---|
+| 1 | Smoke test | PASS | VM `results.log` 15:48 [install]; `shots/stage-install.png` |
+| 2a | Functional: happy path | PARTIAL | Presets switch (FC-20 test), Orgo create/move/resize/roll-up verified by Rex 2026-11-06 (FC-7). Not yet re-run on the RC. |
+| 2b | Boundaries | PARTIAL | ~180 icons on Rex's PC (Organized preset scroll fix). Empty desktop and one icon not tried. |
+| 2c | Invalid / odd input | PASS | `[edge-odd-names]`: emoji, accents, 180-char name, no extension, leading dot, quotes, brackets, odd folder: all kept in layout, no errors. Emoji label draws as a box (FC-30, Low). |
+| 3 | Automated tests | PASS | 54 of 54 with the FC-28/29/32/33 fixes (was 46 of 46 on b4fe73b). Licensing tests in the working tree not run yet. |
+| 4 | Confirmation + regression | PASS | FC-25 and FC-26 retested in VM (`[fix-*]` lines, 16:51–16:52); install, presets, reinstall rerun. |
+| 5 | Clean-machine run | PASS | Fresh Windows 11 VM, standard user. |
+| 6a | Save, close, reopen | PASS | `[seed-presets]` 15:56: presets kept after Orgodesk saves. |
+| 6b | Missing data folder | PASS | `[data-deleted]` 16:05 and `[fix-data-deleted]` 16:52; start-with-Windows kept (FC-26 fixed). |
+| 6c | Damaged layout.json | PASS (after fix) | Fix build 23:05: Orgos restored from `layout.json.bak`, logged, warning shown (`shots/fix2-damaged-message.png`). Damaged settings reset once and logged. Before the fix (19:49): 0 Orgos, nothing logged, user not told (FC-28, FC-29, both fixed). |
+| 6d | Killed mid-save | PASS | `[edge-kill-mid-save]`: 20 hard kills at random moments, layout.json valid every time (atomic temp-file save). |
+| 6e | Previous version's data | PASS | Nov 7 build's layout opened by b4fe73b on Rex's PC (152 KB layout kept, 2026-11-11 19:34). |
+| 7 | Errors, logs, no secrets | PARTIAL | `[edge-log-error]`: a failed save (read-only layout.json) is logged with the full exception, but the user isn't told and a `.tmp` file is left (FC-31, Minor). Damaged data is not logged at all (FC-28, FC-29). |
+| 8 | Speed and memory | PASS | `[edge-memory]` 21:39: working set 81.5 MB → 82.1 MB over 30 idle minutes (a slow creep of about 1 MB an hour; recheck over 8+ hours in the soak round), 2.2 CPU seconds total. |
+| 9 | Secrets, input, access | PARTIAL | No keys in code (dev build). Licensing code not reviewed yet. Runs without admin. |
+| — | Exploratory session | NOT RUN | |
+
+### Specialized A: Windows desktop app
+
+| Test | Result | Evidence |
+|---|---|---|
+| Install on clean VM as standard user | PASS | `[install]` 15:48 and `[fix-fresh-install]` 16:51 |
+| Shortcut, Start Menu, startup entry on the real system | PASS | Run value and Start Menu link in VM; Run value on Rex's PC checked through StdRegProv 2026-11-11 |
+| First run with no data | PASS | `[fix-data-deleted]` |
+| Starts by itself after restart | PASS | VM: 33 s and 47 s after boot (Nov 7 build); 17:01:29 after restart with fresh settings (b4fe73b) |
+| Shows only Windows' own desktop items on a fresh PC | PASS | `[fix-fresh-install]`; `shots/fix-placed-kept.png` (placed items kept) |
+| Uninstall leaves nothing behind | **FAIL (by design today)** | `--uninstall` removes the Run value and Start Menu link but leaves the program and data, and there is no entry in Settings > Apps. Needs a decision before sale: see Gaps. |
+| Upgrade over previous version keeps data | PASS | Rex's PC, Nov 7 build to b4fe73b |
+| Delete program folder + reinstall keeps data | PASS | `[reinstall]` 15:57 |
+| Resolution change while running | PASS | 1024×768 → 800×600 → back; Orgos stay on screen. Icon landing on another (FC-33) fixed: stacked icons spread out after a display change. |
+| Second monitor | PASS | Orgo on monitor 2 draws there; unplugging monitor 2 pulls it back onto monitor 1 (FC-34). Doesn't return to monitor 2 when replugged. |
+| 150% display scaling | PASS (after fix) | Fix build: 100% → 150% at 1024×768, 11 icons in 11 cells, Places scaled (`shots/fix2-150pct-1024.png`). Before the fix labels overlapped (FC-32, fixed). |
+| Keyboard across processes | NOT RUN | FC-9 "not verified" |
+| Path with spaces / non-English user name | NOT RUN | |
+
+### Production gate
+
+| # | Item | Result | Evidence / what's missing |
+|---|---|---|---|
+| P1 | Open issues by severity | PROPOSED | From the 2026-11-11 VM round: Majors FC-28 and FC-32 **fixed** (with FC-29, FC-33); still open: **Minor** FC-31; **Low** FC-30. Older open issues (FC-5, 6, 10, 12, 13, 23) and FC-9 still need a severity. Rex confirms. |
+| P2 | Release candidate built from a tag, SHA-256 recorded | NOT DONE | No version number in the project yet; licensing work uncommitted. |
+| P3 | CHANGELOG.md, known issues | NOT DONE | No CHANGELOG.md. |
+| P4 | Full regression on the RC | NOT DONE | Needs the RC. |
+| P5 | Alpha: Rex uses the RC for an agreed period | NOT DONE | Rex sets the period. |
+| P6 | Beta: outside users | NOT DONE | Or Rex's written skip. |
+| P7 | Operational: logs readable, update path | PARTIAL | Logs fine; no "open log folder" menu item; no update path written. |
+| P8 | Business: store claims tested | **FAIL** | Store copy and README say Windows 10/11; only Windows 11 tested. Test a Windows 10 VM or drop the claim. |
+| P9 | Signed, scanned, download tested | NOT DONE | Exe is unsigned (strong SmartScreen warning; Smart App Control may block it). |
+| P10 | Update and rollback tried | PARTIAL | Upgrade Nov 7 → b4fe73b works; rollback install not tried. |
+| P11 | Third-party licenses, THIRD-PARTY-NOTICES | NOT DONE | Self-contained build bundles the .NET runtime and WinForms (MIT): notices file needed. |
+| P12 | EULA, refund, privacy policy | NOT DONE | License check sends the key to Gumroad: privacy policy must say so. |
+| P13 | Paid features: trial, keys, PC limit, offline, clock, refund | NOT DONE | SALES.md step 5 describes the VM loop; plus offline start, clock moved, 6th PC. |
+| P14 | Support path, watch period | NOT DONE | SupportEmail empty in Sales.cs. |
+| **GO / NO-GO** | | **NO-GO** | Open items above. |
+
+### Gaps to close before release (in order)
+
+1. Licensing work committed, then run its tests and the P13 loop in the VM.
+2. Decide uninstall behaviour: register in Settings > Apps and remove program files on uninstall (data kept or asked), or document clearly. The Windows App Certification Kit's "clean reversible install" test expects nothing left behind.
+3. Windows 10 VM test, or remove "Windows 10" from README and store copy.
+4. ~~Fix FC-28 and FC-32~~ done 2026-11-11 (with FC-29, FC-33). Still open: FC-31 (failed save not shown), FC-30 (emoji label).
+5. Still not run: FC-9 (keyboard across processes, needs hands-on input), the exploratory session, an 8-hour soak.
+
+VM state after this round: VBoxSVGA graphics, two monitors, test user at 150% scaling (`LogPixels` 144), odd-name test files on its desktop.
+6. Version number, CHANGELOG.md, THIRD-PARTY-NOTICES, severity for each open FC issue.
+7. Code signing (Rex: Azure Artifact Signing or OV certificate), EULA, refund and privacy policy, support email.
+8. Release candidate, full regression on it, alpha period, beta or written skip, go/no-go.

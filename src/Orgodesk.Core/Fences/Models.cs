@@ -106,6 +106,12 @@ public sealed class Layout
     public List<Page> Presets { get; set; } = new();
     public string? ActivePresetId { get; set; }
 
+    /// <summary>
+    /// The display scale (1.0 = 100%) the positions in this layout were laid out at; 0 = not recorded yet.
+    /// When the scale changes, positions are converted so icons don't overlap (FC-32).
+    /// </summary>
+    public double GridScale { get; set; }
+
     [JsonIgnore]
     public Page ActivePage
     {

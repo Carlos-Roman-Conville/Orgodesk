@@ -143,7 +143,29 @@ public sealed class DesktopSurface : Control
             }
         }
         _watchdog.Start();
+        ReportLoadProblems();
         return IsHandleCreated;
+    }
+
+    /// <summary>Logs and shows any problem met while loading the layout or settings (FC-28, FC-29). Shown once.</summary>
+    private void ReportLoadProblems()
+    {
+        var problems = _store.TakeLoadProblems();
+        if (problems.Count == 0) return;
+        foreach (var p in problems) Log.Error(p);
+        var text = string.Join(Environment.NewLine + Environment.NewLine, problems);
+        void Show() => MessageBox.Show(text, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        if (IsHandleCreated) BeginInvoke(new Action(Show)); else Show();
+    }
+
+    /// <summary>
+    /// Converts the layout when the display scale differs from the one it was laid out at (FC-32).
+    /// Returns true if the layout changed.
+    /// </summary>
+    private bool EnsureGridScale(Rectangle area, LayoutMetrics m)
+    {
+        var scale = ScreenInfo.ScaleAt(new Point(area.X + area.Width / 2, area.Y + area.Height / 2));
+        return LayoutReconciler.Rescale(_model.Layout, scale, area, m);
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -214,8 +236,10 @@ public sealed class DesktopSurface : Control
         if (!IsHandleCreated || _closing) return;
         PositionWindow();
         RebuildDib();
+        var work = ScreenInfo.PrimaryWorkArea;
+        bool rescaled = EnsureGridScale(work, _renderer.MetricsAt(new Point(work.X + work.Width / 2, work.Y + work.Height / 2)));
         var area = ScreenInfo.VirtualScreen;
-        if (LayoutReconciler.ClampToArea(_model.Layout, area, _renderer.MetricsAt(area.Location)) > 0) SaveSoon();
+        if (LayoutReconciler.ClampToArea(_model.Layout, area, _renderer.MetricsAt(area.Location)) > 0 || rescaled) SaveSoon();
         _renderer.ClearFonts();
         RequestRender();
     }
@@ -239,6 +263,10 @@ public sealed class DesktopSurface : Control
                 return;
             case Const.WM_DPICHANGED_AFTERPARENT:
                 _renderer.ClearFonts();
+                {
+                    var work = ScreenInfo.PrimaryWorkArea;
+                    if (EnsureGridScale(work, _renderer.MetricsAt(new Point(work.X + work.Width / 2, work.Y + work.Height / 2)))) SaveSoon();
+                }
                 RequestRender();
                 break;
         }
@@ -308,7 +336,8 @@ public sealed class DesktopSurface : Control
             var facts = _model.RefreshDesktop();
             var area = ScreenInfo.PrimaryWorkArea;
             var m = _renderer.MetricsAt(new Point(area.X + area.Width / 2, area.Y + area.Height / 2));
-            bool changed = ApplyPending(area, m);
+            bool changed = EnsureGridScale(area, m);
+            changed |= ApplyPending(area, m);
             var result = LayoutReconciler.Reconcile(_model.Layout, facts, area, m);
             changed |= result.Changed;
             changed |= LayoutReconciler.EvictFreeIconsUnderFences(_model.Layout.ActivePage, area, m) > 0;

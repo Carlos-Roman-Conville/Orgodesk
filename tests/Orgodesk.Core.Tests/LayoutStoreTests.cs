@@ -140,4 +140,47 @@ public class LayoutStoreTests : IDisposable
         store.SaveSettings(new AppSettings { StartWithWindows = false });
         Assert.False(store.LoadSettings().StartWithWindows);
     }
+
+    [Fact]
+    public void DamagedLayout_RestoresLastGoodCopy_AndReportsIt()
+    {
+        // FC-28: a damaged layout.json must not silently wipe the user's Orgos.
+        var store = new LayoutStore(_root);
+        store.SaveLayout(SampleLayout());
+        store.LoadLayout();                                   // clean load: writes layout.json.bak
+        var good = File.ReadAllText(store.LayoutPath);
+        File.WriteAllText(store.LayoutPath, good.Substring(0, good.Length / 2));
+
+        var reopened = new LayoutStore(_root);
+        var back = reopened.LoadLayout();
+        Assert.Equal(2, back.ActivePage.Fences.Count);
+        var problems = reopened.TakeLoadProblems();
+        Assert.Single(problems);
+        Assert.Contains("restored", problems[0]);
+        Assert.NotEmpty(Directory.GetFiles(_root, "layout.json.corrupt-*"));
+        Assert.Empty(reopened.TakeLoadProblems());            // reported once
+    }
+
+    [Fact]
+    public void DamagedLayout_WithoutBackup_SaysSo()
+    {
+        var store = new LayoutStore(_root);
+        File.WriteAllText(store.LayoutPath, "{ \"pages\": [");
+        var back = store.LoadLayout();
+        Assert.Single(back.Pages);
+        Assert.Contains("no backup", store.TakeLoadProblems().Single());
+    }
+
+    [Fact]
+    public void DamagedSettings_AreReplacedByDefaults_Once()
+    {
+        // FC-29: the damaged file must not be copied aside again at every start.
+        var store = new LayoutStore(_root);
+        File.WriteAllText(store.SettingsPath, "{ \"iconSize\": 48, \"startWith");
+        var s = store.LoadSettings();
+        Assert.True(s.StartWithWindows);
+        Assert.Single(store.TakeLoadProblems());
+        new LayoutStore(_root).LoadSettings();
+        Assert.Single(Directory.GetFiles(_root, "settings.json.corrupt-*"));
+    }
 }
