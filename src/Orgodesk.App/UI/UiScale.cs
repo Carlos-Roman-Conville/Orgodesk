@@ -18,6 +18,10 @@ internal static class UiScale
             float k = form.DeviceDpi / 96f;
             if (Math.Abs(k - 1f) < 0.01f) return;
             form.Scale(new SizeF(k, k));
+            // Never larger than the screen's usable area (taskbar excluded), so bottom buttons stay reachable.
+            var screen = Screen.FromControl(form).WorkingArea;
+            if (form.Width > screen.Width || form.Height > screen.Height)
+                form.Size = new Size(Math.Min(form.Width, screen.Width), Math.Min(form.Height, screen.Height));
             var anchor = form.Owner != null && form.StartPosition == FormStartPosition.CenterParent
                 ? form.Owner.Bounds
                 : Screen.FromControl(form).WorkingArea;

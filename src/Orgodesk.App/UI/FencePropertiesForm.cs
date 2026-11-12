@@ -30,9 +30,9 @@ public sealed class FencePropertiesForm : Form
         TopMost = true;
         UiScale.Apply(this);   // scale the 96-dpi layout at 125-200% (FC-35)
         Font = new Font("Segoe UI", 9f);
-        ClientSize = new Size(500, 300);
+        ClientSize = new Size(580, 380);   // fits the portal row (text box, Browse, Clear) and all rows at 100%
 
-        var t = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2, Padding = new Padding(12) };
+        var t = new TableLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, ColumnCount = 2, Padding = new Padding(12) };   // scrolls if short of room; OK/Cancel stay visible (FC-35)
         t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
         t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         void Row(string label, Control c)

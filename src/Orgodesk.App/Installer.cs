@@ -78,17 +78,12 @@ public static class Installer
                 store.SaveSettings(settings);
             }
 
-            // The program folder may hold the exe that is running now, so a hidden command deletes it after this exits.
-            if (Directory.Exists(InstallDir))
-            {
-                Process.Start(new ProcessStartInfo("cmd.exe", $"/c timeout /t 3 /nobreak >nul & rmdir /s /q \"{InstallDir}\"")
-                    { CreateNoWindow = true, UseShellExecute = false, WindowStyle = ProcessWindowStyle.Hidden });
-            }
             Log.Info($"Uninstalled (data {(deleteData ? "deleted" : "kept")})");
             if (!quiet)
                 MessageBox.Show(deleteData ? "Orgodesk has been removed, with your Orgos and settings." :
                     $"Orgodesk has been removed. Your Orgos and settings are kept in\n{LayoutStore.DefaultRoot}\nand come back if you reinstall.",
                     "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            DeleteProgramFolderAfterExit();
             return 0;
         }
         catch (Exception ex)
@@ -97,6 +92,26 @@ public static class Installer
             if (!quiet) MessageBox.Show("Uninstall failed: " + ex.Message, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
+    }
+
+    /// <summary>
+    /// The program folder may hold the exe that is running now (Settings > Apps starts the installed copy), so a hidden
+    /// command deletes it after this process exits: it retries about once a second for 30 seconds until the folder is gone.
+    /// Started last, after every dialog, so the exe is about to exit.
+    /// </summary>
+    private static void DeleteProgramFolderAfterExit()
+    {
+        if (!Directory.Exists(InstallDir)) return;
+        var d = InstallDir;
+        var loop = $"/c for /l %i in (1,1,30) do @(ping -n 2 127.0.0.1 >nul & rmdir /s /q \"{d}\" 2>nul & if not exist \"{d}\" exit /b 0)";
+        try
+        {
+            Process.Start(new ProcessStartInfo("cmd.exe", loop)
+                { CreateNoWindow = true, UseShellExecute = false, WindowStyle = ProcessWindowStyle.Hidden,
+                  // Not inside the folder being deleted: Windows won't remove a folder a process is using as its working directory.
+                  WorkingDirectory = Path.GetTempPath() });
+        }
+        catch (Exception ex) { Log.Error("Could not schedule the program folder removal", ex); }
     }
 
     private static void TrayContext_ClearHiddenFlag() => UI.TrayContext.ClearHiddenFlag();
