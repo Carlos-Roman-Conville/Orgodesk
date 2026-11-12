@@ -41,7 +41,7 @@ internal static class Program
         if (args.Any(a => a.Equals("--install", StringComparison.OrdinalIgnoreCase)))
             return Installer.Install();
         if (args.Any(a => a.Equals("--uninstall", StringComparison.OrdinalIgnoreCase)))
-            return Installer.Uninstall();
+            return Installer.Uninstall(quiet: args.Any(a => a.Equals("--quiet", StringComparison.OrdinalIgnoreCase)));
 
         if (args.Any(a => a.Equals("--exit", StringComparison.OrdinalIgnoreCase)))
         {
@@ -49,6 +49,20 @@ internal static class Program
             if (!EventWaitHandle.TryOpenExisting(ExitEventName, out var ev)) return 1;
             using (ev) ev.Set();
             return 0;
+        }
+
+        ApplicationConfiguration.Initialize();   // before any dialog, including the install offer below
+
+        // A buyer who double-clicks the downloaded exe gets offered a proper install (Start Menu, start with Windows,
+        // Settings > Apps entry) instead of running from Downloads. Asked before the single-instance lock, because the
+        // installer starts the installed copy. Development builds never ask.
+        if (!Sales.Config.IsDevBuild && !File.Exists(Installer.InstalledExe)
+            && !string.Equals(Path.GetFullPath(Environment.ProcessPath ?? Application.ExecutablePath), Path.GetFullPath(Installer.InstalledExe), StringComparison.OrdinalIgnoreCase))
+        {
+            var answer = MessageBox.Show(
+                "Install Orgodesk on this PC?\n\nYes (recommended): copies it to your user folder, adds it to the Start menu and starts it with Windows. You can remove it any time in Settings > Apps.\nNo: just run this copy now.",
+                "Orgodesk", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (answer == DialogResult.Yes) return Installer.Install();
         }
 
         using var mutex = new Mutex(true, MutexName, out bool first);
@@ -59,7 +73,6 @@ internal static class Program
             return 0;
         }
 
-        ApplicationConfiguration.Initialize();
         Application.OleRequired(); // shell APIs (SHParseDisplayName, SHChangeNotifyRegister) need COM on this thread
         Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
         Application.ThreadException += (_, e) => Log.Error("Unhandled UI exception", e.Exception);

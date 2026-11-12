@@ -21,7 +21,7 @@ Fences (3 and later) takes over icon rendering instead of moving Explorer's icon
 
 ## Requirements
 
-- Windows 10/11, 64-bit. Tested on Windows 11 build 26200.
+- Windows 11, 64-bit (Windows 10 is not supported). Tested on Windows 11 builds 26200 and 26300.
 - .NET 8 SDK to build (`dotnet --version`), or the .NET 8 Desktop Runtime to run a published build.
 - **Exit Stardock Fences first** if it is installed. Both programs take over the same desktop; running both at once
   makes them fight over the icon list. (Fences also leaves a hook DLL inside Explorer until Explorer restarts.)
@@ -34,7 +34,10 @@ install.bat
 
 builds a single self-contained `dist\Orgodesk.exe` (no .NET install needed), copies it to
 `%LOCALAPPDATA%\Programs\Orgodesk\`, registers it to start with Windows, adds a Start Menu entry and
-starts it. From then on it is simply on, every login. `uninstall.bat` removes the startup entry (files stay).
+starts it, and registers it in Settings > Apps. From then on it is simply on, every login.
+Uninstall from Settings > Apps (or `uninstall.bat`; `Orgodesk.exe --uninstall --quiet` for no questions): it removes the
+startup entry, Start Menu entry, Apps entry and program folder, and asks whether to keep your Orgos (kept by default).
+A sold (non-development) build run from anywhere else offers to install itself on first run.
 `publish.bat` alone just rebuilds `dist\Orgodesk.exe`.
 
 ## Build and run

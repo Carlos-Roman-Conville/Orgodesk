@@ -57,7 +57,7 @@ Written 2026-11-11 for the 10-day push (see the 10-Day Money Guide).
 
 **Description:**
 
-> Your desktop, sorted. Orgodesk turns your Windows 10/11 desktop into tidy, labelled boxes called Orgos.
+> Your desktop, sorted. Orgodesk turns your Windows 11 desktop into tidy, labelled boxes called Orgos.
 >
 > - **Orgos:** drag a box on the desktop, drop icons in, give it a title. Resize, move and snap them into place.
 > - **Roll up:** double-click a title to fold an Orgo down to its title bar. Turn on auto-roll and it opens when you hover over it.
@@ -70,7 +70,7 @@ Written 2026-11-11 for the 10-day push (see the 10-Day Money Guide).
 >
 > **Try it free for 14 days**, everything included. One-time purchase, no subscription. A key works on up to 5 of your PCs.
 >
-> Requires Windows 10 or 11 (64-bit). Close any other desktop organizer before running it.
+> Requires Windows 11 (64-bit). Windows 10 is not supported. Close any other desktop organizer before running it.
 
 **Windows warning note (put it on the page and in the readme):**
 
@@ -79,20 +79,8 @@ Written 2026-11-11 for the 10-day push (see the 10-Day Money Guide).
 
 ## README-buyers.txt (ships in the zip)
 
-```
-Orgodesk - desktop organizer for Windows 10/11
-
-Start:      double-click Orgodesk.exe. It runs from the tray (bottom right).
-First Orgo: right-click and drag on empty desktop, or right-click the desktop > New Orgo here.
-License:    tray icon > License... > paste the key from your Gumroad receipt > Activate.
-Start with Windows: tray icon > Settings.
-Exit:       tray icon > Exit. Your normal desktop icons come back.
-Stuck?      Run  Orgodesk.exe --restore  to bring the normal desktop icons back.
-
-Close Stardock Fences or any other desktop organizer before running Orgodesk.
-If Windows says "Windows protected your PC": More info > Run anyway.
-Support: <your support email>
-```
+Now a real file: [README-buyers.txt](README-buyers.txt). `release.bat` copies it, `legal/EULA.md` (as EULA.txt),
+THIRD-PARTY-NOTICES.txt and CHANGELOG.md next to the exe. Fill `[SUPPORT EMAIL]` in it and in `legal/`.
 
 ## Launch posts
 

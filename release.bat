@@ -27,5 +27,7 @@ if errorlevel 1 (
 )
 copy /y THIRD-PARTY-NOTICES.txt release\ >nul
 copy /y CHANGELOG.md release\ >nul
-echo Done: %~dp0release\Orgodesk.exe (with THIRD-PARTY-NOTICES.txt and CHANGELOG.md; zip all three)
+copy /y README-buyers.txt release\ >nul
+copy /y legal\EULA.md release\EULA.txt >nul
+echo Done: %~dp0release\Orgodesk.exe (with README-buyers.txt, EULA.txt, THIRD-PARTY-NOTICES.txt, CHANGELOG.md; zip all five)
 pause

@@ -49,13 +49,13 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | First run with no data | PASS | `[fix-data-deleted]` |
 | Starts by itself after restart | PASS | VM: 33 s and 47 s after boot (Nov 7 build); 17:01:29 after restart with fresh settings (b4fe73b) |
 | Shows only Windows' own desktop items on a fresh PC | PASS | `[fix-fresh-install]`; `shots/fix-placed-kept.png` (placed items kept) |
-| Uninstall leaves nothing behind | **FAIL (by design today)** | `--uninstall` removes the Run value and Start Menu link but leaves the program and data, and there is no entry in Settings > Apps. Needs a decision before sale: see Gaps. |
+| Uninstall leaves nothing behind | BUILT, VM TEST PENDING | 2026-11-12: real uninstaller. Install registers Orgodesk in Settings > Apps; uninstall removes the startup entry, Start Menu entry, Apps entry and program folder, and asks whether to keep the Orgos (kept by default; `--quiet` keeps them without asking). Sold builds offer to install themselves on first run. VM test after the soak ends (it would stop Orgodesk mid-soak). |
 | Upgrade over previous version keeps data | PASS | Rex's PC, Nov 7 build to b4fe73b |
 | Delete program folder + reinstall keeps data | PASS | `[reinstall]` 15:57 |
 | Resolution change while running | PASS | 1024×768 → 800×600 → back; Orgos stay on screen. Icon landing on another (FC-33) fixed: stacked icons spread out after a display change. |
 | Second monitor | PASS | Orgo on monitor 2 draws there; unplugging monitor 2 pulls it back onto monitor 1 (FC-34). Doesn't return to monitor 2 when replugged. |
 | 150% display scaling | PASS (after fix) | Fix build: 100% → 150% at 1024×768, 11 icons in 11 cells, Places scaled (`shots/fix2-150pct-1024.png`). Before the fix labels overlapped (FC-32, fixed). |
-| Keyboard across processes | NOT RUN | FC-9: needs a click on the desktop first; the VM can be typed into but not clicked. Rex, 5 minutes by hand: click an icon, F2 rename, Ctrl+A, Delete, arrows, Esc. |
+| Keyboard across processes | NOT VERIFIED | FC-9, tried 2026-11-12: input injected inside the VM reaches Windows (the Start menu opens) but Orgodesk did not react to injected clicks at all, so the test can't tell whether real keys work. Needs a real mouse: Rex by hand, or VirtualBox access for Claude (requests came back declined). |
 | Path with spaces / non-English user name | NOT RUN | |
 
 ### Production gate
@@ -69,11 +69,11 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | P5 | Alpha: Rex uses the RC for an agreed period | NOT DONE | Rex sets the period. |
 | P6 | Beta: outside users | NOT DONE | Or Rex's written skip. |
 | P7 | Operational: logs readable, update path | PARTIAL | Logs fine; no "open log folder" menu item; no update path written. |
-| P8 | Business: store claims tested | **FAIL** | Store copy and README say Windows 10/11; only Windows 11 tested. Test a Windows 10 VM or drop the claim. |
-| P9 | Signed, scanned, download tested | NOT DONE | Exe is unsigned (strong SmartScreen warning; Smart App Control may block it). |
+| P8 | Business: store claims tested | PARTIAL | Rex 2026-11-12: Windows 11 only, no Windows 10 version. README and store copy now say Windows 11 (64-bit) only, which matches what was tested. Rest of the store page checked at the RC. |
+| P9 | Signed, scanned, download tested | NOT DONE | Unsigned for now; PRODUCTION.md now allows shipping unsigned only as Rex's written decision with SmartScreen steps for buyers (README-buyers.txt has them). Defender scan and real-download test at the RC. |
 | P10 | Update and rollback tried | PARTIAL | Upgrade Nov 7 → b4fe73b works; rollback install not tried. |
 | P11 | Third-party licenses, THIRD-PARTY-NOTICES | DONE | `THIRD-PARTY-NOTICES.txt` (MIT licenses of the .NET 8 runtime and Windows Desktop runtime, plus the runtime's own notices); `release.bat` copies it next to the exe. No other third-party code or assets. |
-| P12 | EULA, refund, privacy policy | NOT DONE | License check sends the key to Gumroad: privacy policy must say so. |
+| P12 | EULA, refund, privacy policy | DRAFTED | `legal/EULA.md`, `PRIVACY.md`, `REFUNDS.md` written from what the code does (key + product id to Gumroad, nothing else). Rex fills [brackets] (name, state, refund window, support email) and decides on a lawyer. EULA ships as EULA.txt. |
 | P13 | Paid features: trial, keys, PC limit, offline, clock, refund | PARTIAL | VM 2026-11-12 with a test-only product id: trial start, 2 days left, trial ended (window before desktop), wrong key, no internet, clock back, close exits: all PASS; license window at 150% fixed (FC-35); future-clock lockout fixed (FC-36). Needs Rex's Gumroad product: valid key, 6th PC, refund. |
 | P14 | Support path, watch period | NOT DONE | SupportEmail empty in Sales.cs. |
 | **GO / NO-GO** | | **NO-GO** | Open items above. |
@@ -82,7 +82,7 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 
 1. Licensing work committed, then run its tests and the P13 loop in the VM.
 2. Decide uninstall behaviour: register in Settings > Apps and remove program files on uninstall (data kept or asked), or document clearly. The Windows App Certification Kit's "clean reversible install" test expects nothing left behind.
-3. Windows 10 VM test, or remove "Windows 10" from README and store copy.
+3. ~~Windows 10~~: Rex decided Windows 11 only (2026-11-12); claims removed.
 4. ~~Fix FC-28 and FC-32~~ done 2026-11-11 (with FC-29, FC-33). Still open: FC-31 (failed save not shown), FC-30 (emoji label).
 5. Still not run: FC-9 (keyboard across processes, needs hands-on input), the exploratory session, an 8-hour soak.
 
@@ -95,3 +95,5 @@ VM state after this round: VBoxSVGA graphics, two monitors, test user at 150% sc
 ## Round 2 — 2026-11-12
 
 Fixes: FC-30 (emoji labels), FC-31 (failed save shown), FC-35 (dialogs at 150%), FC-36 (paying buyer locked out after a future clock). Version 1.0.0, CHANGELOG.md, THIRD-PARTY-NOTICES.txt. Paid version tested in the VM (FC-37). Exploratory churn session passed. 8-hour soak started 00:37 on the final development build (results in the VM at `C:\orgodesk-test\soak.log` and `[x-soak]` lines).
+
+Round 2 continued (2026-11-12, later): Windows 10 dropped (Rex). Built: real uninstaller + Settings > Apps entry, first-run install offer for sold builds, README-buyers.txt, legal drafts. FC-9 still needs a real mouse.

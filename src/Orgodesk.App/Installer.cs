@@ -32,6 +32,7 @@ public static class Installer
             settings.StartWithWindows = true;
             store.SaveSettings(settings);
             CreateShortcut(ShortcutPath, InstalledExe, "Orgodesk");
+            RegisterUninstallEntry();
 
             Process.Start(new ProcessStartInfo(InstalledExe) { UseShellExecute = true, WorkingDirectory = InstallDir });
 
@@ -50,28 +51,79 @@ public static class Installer
         }
     }
 
-    public static int Uninstall()
+    public static int Uninstall(bool quiet = false)
     {
         try
         {
             StopRunningInstance();
             AutoStart.SetEnabled(false, InstalledExe);
-            var store = new LayoutStore(LayoutStore.DefaultRoot);
-            var settings = store.LoadSettings();
-            settings.StartWithWindows = false;
-            store.SaveSettings(settings);
             try { File.Delete(ShortcutPath); } catch { }
+            try { Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(UninstallKey, throwOnMissingSubKey: false); } catch { }
             DesktopWindows.SetDesktopIconsVisible(true);
-            MessageBox.Show($"Orgodesk no longer starts with Windows. The program file stays at\n{InstalledExe}\nand your layout stays in\n{LayoutStore.DefaultRoot}\nDelete those folders by hand if you want them gone.",
-                "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            TrayContext_ClearHiddenFlag();
+
+            // Data: kept by default so a reinstall brings the Orgos back. Asked unless --quiet.
+            bool deleteData = !quiet && MessageBox.Show(
+                $"Also delete your Orgos, presets and settings?\n\nYes: delete {LayoutStore.DefaultRoot}\nNo: keep them, so reinstalling Orgodesk brings everything back.",
+                "Uninstall Orgodesk", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+            if (deleteData)
+            {
+                try { Directory.Delete(LayoutStore.DefaultRoot, recursive: true); } catch (Exception ex) { Log.Error("Could not delete data folder", ex); }
+            }
+            else
+            {
+                var store = new LayoutStore(LayoutStore.DefaultRoot);
+                var settings = store.LoadSettings();
+                settings.StartWithWindows = false;
+                store.SaveSettings(settings);
+            }
+
+            // The program folder may hold the exe that is running now, so a hidden command deletes it after this exits.
+            if (Directory.Exists(InstallDir))
+            {
+                Process.Start(new ProcessStartInfo("cmd.exe", $"/c timeout /t 3 /nobreak >nul & rmdir /s /q \"{InstallDir}\"")
+                    { CreateNoWindow = true, UseShellExecute = false, WindowStyle = ProcessWindowStyle.Hidden });
+            }
+            Log.Info($"Uninstalled (data {(deleteData ? "deleted" : "kept")})");
+            if (!quiet)
+                MessageBox.Show(deleteData ? "Orgodesk has been removed, with your Orgos and settings." :
+                    $"Orgodesk has been removed. Your Orgos and settings are kept in\n{LayoutStore.DefaultRoot}\nand come back if you reinstall.",
+                    "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return 0;
         }
         catch (Exception ex)
         {
             Log.Error("Uninstall failed", ex);
-            MessageBox.Show("Uninstall failed: " + ex.Message, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!quiet) MessageBox.Show("Uninstall failed: " + ex.Message, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
+    }
+
+    private static void TrayContext_ClearHiddenFlag() => UI.TrayContext.ClearHiddenFlag();
+
+    /// <summary>Per-user entry in Settings > Apps (no admin rights), so Orgodesk can be removed like any app.</summary>
+    private const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\Orgodesk";
+
+    private static void RegisterUninstallEntry()
+    {
+        try
+        {
+            using var k = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(UninstallKey);
+            if (k == null) return;
+            var version = typeof(Installer).Assembly.GetName().Version;
+            k.SetValue("DisplayName", "Orgodesk");
+            k.SetValue("DisplayVersion", version == null ? "1.0.0" : $"{version.Major}.{version.Minor}.{version.Build}");
+            k.SetValue("Publisher", "Orgodesk");
+            k.SetValue("DisplayIcon", InstalledExe);
+            k.SetValue("InstallLocation", InstallDir);
+            k.SetValue("UninstallString", $"\"{InstalledExe}\" --uninstall");
+            k.SetValue("QuietUninstallString", $"\"{InstalledExe}\" --uninstall --quiet");
+            k.SetValue("NoModify", 1, Microsoft.Win32.RegistryValueKind.DWord);
+            k.SetValue("NoRepair", 1, Microsoft.Win32.RegistryValueKind.DWord);
+            k.SetValue("EstimatedSize", (int)(new FileInfo(InstalledExe).Length / 1024), Microsoft.Win32.RegistryValueKind.DWord);
+            k.SetValue("InstallDate", DateTime.Now.ToString("yyyyMMdd"));
+        }
+        catch (Exception ex) { Log.Error("Could not register the uninstall entry", ex); }
     }
 
     private static void StopRunningInstance()
