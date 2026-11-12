@@ -4,9 +4,12 @@ Install:    double-click Orgodesk.exe and choose Yes to install. It goes in the 
             Windows and runs from the tray (bottom right).
             If Windows says "Windows protected your PC": click More info, then Run anyway. Windows shows this
             for apps from new, independent developers; you only need to do it once.
+            If Windows says Smart App Control blocked it, there is no Run anyway button: see
+            Windows Security > App & browser control > Smart App Control, or contact support.
 First Orgo: right-click and drag on empty desktop, or right-click the desktop > New Orgo here.
 License:    the 14-day trial needs no key. To activate: tray icon > License... > paste the key from your
-            Gumroad receipt > Activate. A key works on up to 5 of your PCs.
+            Gumroad receipt > Activate. A key can be activated 5 times (each PC, and each
+            reinstall that deletes your data, uses one). Need more? Email support.
 Settings:   tray icon > Settings (start with Windows, colors, icon size, rules).
 Exit:       tray icon > Exit. Your normal desktop icons come back.
 Uninstall:  Settings > Apps > Orgodesk > Uninstall. You can keep your Orgos for a later reinstall.
