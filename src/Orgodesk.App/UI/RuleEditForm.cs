@@ -29,7 +29,7 @@ public sealed class RuleEditForm : Form
         MinimizeBox = false;
         MaximizeBox = false;
         ShowInTaskbar = false;
-        AutoScaleMode = AutoScaleMode.Dpi;
+        UiScale.Apply(this);   // scale the 96-dpi layout at 125-200% (FC-35)
         Font = new Font("Segoe UI", 9f);
         ClientSize = new Size(500, 330);
 

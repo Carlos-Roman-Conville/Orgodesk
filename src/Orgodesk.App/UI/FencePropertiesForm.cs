@@ -28,7 +28,7 @@ public sealed class FencePropertiesForm : Form
         MaximizeBox = false;
         ShowInTaskbar = false;
         TopMost = true;
-        AutoScaleMode = AutoScaleMode.Dpi;
+        UiScale.Apply(this);   // scale the 96-dpi layout at 125-200% (FC-35)
         Font = new Font("Segoe UI", 9f);
         ClientSize = new Size(500, 300);
 

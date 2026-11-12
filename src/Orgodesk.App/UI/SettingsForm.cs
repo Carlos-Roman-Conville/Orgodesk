@@ -58,7 +58,7 @@ public sealed class SettingsForm : Form
         ClientSize = new Size(640, 520);
         MinimumSize = new Size(560, 460);
         ShowInTaskbar = true;
-        AutoScaleMode = AutoScaleMode.Dpi;
+        UiScale.Apply(this);   // scale the 96-dpi layout at 125-200% (FC-35)
         Font = new Font("Segoe UI", 9f);
 
         var tabs = new TabControl { Dock = DockStyle.Fill };

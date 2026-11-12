@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using Orgodesk.Core.Licensing;
 using Orgodesk.Core.Persistence;
 using Orgodesk.Windows.Desktop;
 
@@ -10,6 +11,8 @@ namespace Orgodesk.App.UI;
 public sealed class TrayContext : ApplicationContext
 {
     private readonly LayoutStore _store;
+    private readonly LicenseStore _licenseStore;
+    private readonly LicenseRecord _license;
     private readonly DesktopModel _model;
     private readonly DesktopSurface _surface;
     private readonly NotifyIcon _tray;
@@ -23,9 +26,11 @@ public sealed class TrayContext : ApplicationContext
     private static string HiddenFlagPath => Path.Combine(LayoutStore.DefaultRoot, "icons-hidden.flag");
     public static void ClearHiddenFlag() { try { File.Delete(HiddenFlagPath); } catch { } }
 
-    public TrayContext(LayoutStore store)
+    public TrayContext(LayoutStore store, LicenseStore licenseStore, LicenseRecord license)
     {
         _store = store;
+        _licenseStore = licenseStore;
+        _license = license;
         _model = new DesktopModel(store.LoadLayout(), store.LoadSettings());
         _surface = new DesktopSurface(_model, store);
         _surface.ExitRequested += (_, _) => Exit();
@@ -79,6 +84,10 @@ public sealed class TrayContext : ApplicationContext
         {
             try { _surface.BeginInvoke(new Action(Exit)); } catch { }
         }, null, -1, executeOnlyOnce: true);
+        var lic = LicenseRules.Evaluate(_license, Sales.Config, DateTime.UtcNow);
+        if (lic.State == LicenseState.Trial && lic.TrialDaysLeft <= 3)
+            _tray.ShowBalloonTip(8000, "Orgodesk", $"{lic.Message}. Right-click the tray icon and choose License to buy a key.", ToolTipIcon.Info);
+        _ = RecheckLicenseAsync();
         return true;
     }
 
@@ -88,6 +97,12 @@ public sealed class TrayContext : ApplicationContext
         menu.Opening += (_, _) =>
         {
             menu.Items.Clear();
+            var lic = LicenseRules.Evaluate(_license, Sales.Config, DateTime.UtcNow);
+            if (lic.State == LicenseState.Trial)
+            {
+                menu.Items.Add($"{lic.Message}: buy or enter a key...", null, (_, _) => ShowLicense());
+                menu.Items.Add(new ToolStripSeparator());
+            }
             menu.Items.Add("Settings...", null, (_, _) => ShowSettings());
             menu.Items.Add("Layout snapshots...", null, (_, _) => ShowSnapshots());
             menu.Items.Add("Sort icons by rules now", null, (_, _) => _surface.ApplyRulesNow());
@@ -126,6 +141,7 @@ public sealed class TrayContext : ApplicationContext
             menu.Items.Add(hide);
             menu.Items.Add("Refresh icons", null, (_, _) => { _model.Icons.Clear(); _surface.RefreshDesktop(); });
             menu.Items.Add(new ToolStripSeparator());
+            if (lic.State != LicenseState.DevBuild) menu.Items.Add("License...", null, (_, _) => ShowLicense());
             menu.Items.Add("Open settings folder", null, (_, _) => Windows.Shell.ShellActions.OpenPath(_store.RootDir, IntPtr.Zero));
             menu.Items.Add("Exit (restore desktop icons)", null, (_, _) => Exit());
         };
@@ -142,6 +158,26 @@ public sealed class TrayContext : ApplicationContext
         _settingsForm = new SettingsForm(_model, _store, _surface);
         _settingsForm.FormClosed += (_, _) => _settingsForm = null;
         _settingsForm.Show();
+    }
+
+    private void ShowLicense()
+    {
+        using var dlg = new LicenseForm(_licenseStore, _license, Sales.Config);
+        dlg.ShowDialog();
+    }
+
+    /// <summary>Confirms a stored key with Gumroad about once a week. Offline is fine: the grace period covers it.</summary>
+    private async Task RecheckLicenseAsync()
+    {
+        if (!LicenseRules.RecheckDue(_license, Sales.Config, DateTime.UtcNow) || _license.Key is not string key) return;
+        try
+        {
+            var res = await new GumroadVerifier(Sales.Config).VerifyAsync(key, activate: false).ConfigureAwait(true);
+            GumroadVerifier.Apply(_license, key, res, DateTime.UtcNow);
+            _licenseStore.Save(_license);
+            Log.Info($"License recheck: {res.Outcome}");
+        }
+        catch (Exception ex) { Log.Error("License recheck failed", ex); }
     }
 
     private void ShowSnapshots()

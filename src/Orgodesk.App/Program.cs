@@ -1,5 +1,6 @@
 using System.Windows.Forms;
 using Orgodesk.App.UI;
+using Orgodesk.Core.Licensing;
 using Orgodesk.Core.Persistence;
 using Orgodesk.Windows.Desktop;
 
@@ -70,7 +71,20 @@ internal static class Program
 
         Log.Info($"Started (pid {Environment.ProcessId}){(args.Length > 0 ? " args: " + string.Join(' ', args) : "")}");
         var store = new LayoutStore(LayoutStore.DefaultRoot);
-        using var context = new TrayContext(store);
+
+        // Trial and license gate. Runs before the real desktop icons are hidden, so leaving here is always safe.
+        var licenseStore = new LicenseStore(LayoutStore.DefaultRoot);
+        var license = licenseStore.LoadOrStart(DateTime.UtcNow);
+        var status = LicenseRules.Evaluate(license, Sales.Config, DateTime.UtcNow);
+        Log.Info($"License state: {status.State} ({status.Message})");
+        if (!status.CanRun)
+        {
+            using var form = new LicenseForm(licenseStore, license, Sales.Config);
+            form.ShowDialog();
+            if (!form.Status.CanRun) return 3;
+        }
+
+        using var context = new TrayContext(store, licenseStore, license);
         if (!context.Start()) return 2;
         Application.Run(context);
         Log.Info("Exited");

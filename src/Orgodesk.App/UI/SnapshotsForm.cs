@@ -24,7 +24,7 @@ public sealed class SnapshotsForm : Form
         MinimizeBox = false;
         ShowInTaskbar = false;
         TopMost = true;
-        AutoScaleMode = AutoScaleMode.Dpi;
+        UiScale.Apply(this);   // scale the 96-dpi layout at 125-200% (FC-35)
         Font = new Font("Segoe UI", 9f);
 
         _list.Columns.Add("Name", 280);

@@ -9,6 +9,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>Orgodesk.App</RootNamespace>
     <AssemblyName>Orgodesk</AssemblyName>
+    <!-- Semantic Versioning (MAJOR.MINOR.PATCH); see CHANGELOG.md and HQ/testing/PRODUCTION.md section 3. -->
+    <Version>1.0.0</Version>
+    <Product>Orgodesk</Product>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

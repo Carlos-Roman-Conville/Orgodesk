@@ -2,7 +2,7 @@
 
 Orgodesk (formerly "Fences Clone") is a personal, from-scratch desktop organizer for Windows 11 in the style of Stardock Fences. On screen each box is an **Orgo** (plural Orgos); the code keeps the word fence: titled, shaded groups ("fences") on the
 desktop that hold icons, with roll-up, quick-hide, folder portals, desktop pages, auto-sort rules and layout
-snapshots. Built for personal use only; no Stardock code or assets are used.
+snapshots. Being prepared as a paid app with a 14-day trial (see [SALES.md](SALES.md); release status in [TESTING.md](TESTING.md)); no Stardock code or assets are used.
 
 ## How it works
 

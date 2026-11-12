@@ -203,7 +203,15 @@ public sealed class LayoutStore
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
         var tmp = path + ".tmp";
         var json = JsonSerializer.Serialize(value, JsonDefaults.Options);
-        File.WriteAllText(tmp, json);
-        File.Move(tmp, path, overwrite: true);
+        try
+        {
+            File.WriteAllText(tmp, json);
+            File.Move(tmp, path, overwrite: true);
+        }
+        catch
+        {
+            try { File.Delete(tmp); } catch { /* best effort */ }   // FC-31: no stray .tmp after a failed save
+            throw;
+        }
     }
 }

@@ -27,7 +27,7 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | 2a | Functional: happy path | PARTIAL | Presets switch (FC-20 test), Orgo create/move/resize/roll-up verified by Rex 2026-11-06 (FC-7). Not yet re-run on the RC. |
 | 2b | Boundaries | PARTIAL | ~180 icons on Rex's PC (Organized preset scroll fix). Empty desktop and one icon not tried. |
 | 2c | Invalid / odd input | PASS | `[edge-odd-names]`: emoji, accents, 180-char name, no extension, leading dot, quotes, brackets, odd folder: all kept in layout, no errors. Emoji label draws as a box (FC-30, Low). |
-| 3 | Automated tests | PASS | 54 of 54 with the FC-28/29/32/33 fixes (was 46 of 46 on b4fe73b). Licensing tests in the working tree not run yet. |
+| 3 | Automated tests | PASS | 69 of 69 (2026-11-12, includes the licensing tests and the new FC-31/FC-36 tests). |
 | 4 | Confirmation + regression | PASS | FC-25 and FC-26 retested in VM (`[fix-*]` lines, 16:51–16:52); install, presets, reinstall rerun. |
 | 5 | Clean-machine run | PASS | Fresh Windows 11 VM, standard user. |
 | 6a | Save, close, reopen | PASS | `[seed-presets]` 15:56: presets kept after Orgodesk saves. |
@@ -35,10 +35,10 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | 6c | Damaged layout.json | PASS (after fix) | Fix build 23:05: Orgos restored from `layout.json.bak`, logged, warning shown (`shots/fix2-damaged-message.png`). Damaged settings reset once and logged. Before the fix (19:49): 0 Orgos, nothing logged, user not told (FC-28, FC-29, both fixed). |
 | 6d | Killed mid-save | PASS | `[edge-kill-mid-save]`: 20 hard kills at random moments, layout.json valid every time (atomic temp-file save). |
 | 6e | Previous version's data | PASS | Nov 7 build's layout opened by b4fe73b on Rex's PC (152 KB layout kept, 2026-11-11 19:34). |
-| 7 | Errors, logs, no secrets | PARTIAL | `[edge-log-error]`: a failed save (read-only layout.json) is logged with the full exception, but the user isn't told and a `.tmp` file is left (FC-31, Minor). Damaged data is not logged at all (FC-28, FC-29). |
-| 8 | Speed and memory | PASS | `[edge-memory]` 21:39: working set 81.5 MB → 82.1 MB over 30 idle minutes (a slow creep of about 1 MB an hour; recheck over 8+ hours in the soak round), 2.2 CPU seconds total. |
+| 7 | Errors, logs, no secrets | PASS (after fix) | Failed save now logged **and** shown once (FC-31 fixed); damaged data logged and shown (FC-28/29). |
+| 8 | Speed and memory | PASS (8-h soak running) | `[edge-memory]` 21:39: working set 81.5 MB → 82.1 MB over 30 idle minutes (a slow creep of about 1 MB an hour; recheck over 8+ hours in the soak round), 2.2 CPU seconds total. |
 | 9 | Secrets, input, access | PARTIAL | No keys in code (dev build). Licensing code not reviewed yet. Runs without admin. |
-| — | Exploratory session | NOT RUN | |
+| — | Exploratory session | PASS | 2026-11-12, charter: *explore desktop file churn (150 creates, 50 renames, 30 moves, 70 deletes) to discover sync errors, crashes or leaks*. Still running, layout matched the desktop exactly, no errors (`[x-churn]`). A mouse-driven session is still open (needs Rex). |
 
 ### Specialized A: Windows desktop app
 
@@ -55,7 +55,7 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | Resolution change while running | PASS | 1024×768 → 800×600 → back; Orgos stay on screen. Icon landing on another (FC-33) fixed: stacked icons spread out after a display change. |
 | Second monitor | PASS | Orgo on monitor 2 draws there; unplugging monitor 2 pulls it back onto monitor 1 (FC-34). Doesn't return to monitor 2 when replugged. |
 | 150% display scaling | PASS (after fix) | Fix build: 100% → 150% at 1024×768, 11 icons in 11 cells, Places scaled (`shots/fix2-150pct-1024.png`). Before the fix labels overlapped (FC-32, fixed). |
-| Keyboard across processes | NOT RUN | FC-9 "not verified" |
+| Keyboard across processes | NOT RUN | FC-9: needs a click on the desktop first; the VM can be typed into but not clicked. Rex, 5 minutes by hand: click an icon, F2 rename, Ctrl+A, Delete, arrows, Esc. |
 | Path with spaces / non-English user name | NOT RUN | |
 
 ### Production gate
@@ -63,8 +63,8 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | # | Item | Result | Evidence / what's missing |
 |---|---|---|---|
 | P1 | Open issues by severity | PROPOSED | From the 2026-11-11 VM round: Majors FC-28 and FC-32 **fixed** (with FC-29, FC-33); still open: **Minor** FC-31; **Low** FC-30. Older open issues (FC-5, 6, 10, 12, 13, 23) and FC-9 still need a severity. Rex confirms. |
-| P2 | Release candidate built from a tag, SHA-256 recorded | NOT DONE | No version number in the project yet; licensing work uncommitted. |
-| P3 | CHANGELOG.md, known issues | NOT DONE | No CHANGELOG.md. |
+| P2 | Release candidate built from a tag, SHA-256 recorded | NOT DONE | Version set to 1.0.0 in the project; RC not built yet. |
+| P3 | CHANGELOG.md, known issues | DONE | `CHANGELOG.md` (Keep a Changelog form), Unreleased section for 1.0.0. |
 | P4 | Full regression on the RC | NOT DONE | Needs the RC. |
 | P5 | Alpha: Rex uses the RC for an agreed period | NOT DONE | Rex sets the period. |
 | P6 | Beta: outside users | NOT DONE | Or Rex's written skip. |
@@ -72,9 +72,9 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | P8 | Business: store claims tested | **FAIL** | Store copy and README say Windows 10/11; only Windows 11 tested. Test a Windows 10 VM or drop the claim. |
 | P9 | Signed, scanned, download tested | NOT DONE | Exe is unsigned (strong SmartScreen warning; Smart App Control may block it). |
 | P10 | Update and rollback tried | PARTIAL | Upgrade Nov 7 → b4fe73b works; rollback install not tried. |
-| P11 | Third-party licenses, THIRD-PARTY-NOTICES | NOT DONE | Self-contained build bundles the .NET runtime and WinForms (MIT): notices file needed. |
+| P11 | Third-party licenses, THIRD-PARTY-NOTICES | DONE | `THIRD-PARTY-NOTICES.txt` (MIT licenses of the .NET 8 runtime and Windows Desktop runtime, plus the runtime's own notices); `release.bat` copies it next to the exe. No other third-party code or assets. |
 | P12 | EULA, refund, privacy policy | NOT DONE | License check sends the key to Gumroad: privacy policy must say so. |
-| P13 | Paid features: trial, keys, PC limit, offline, clock, refund | NOT DONE | SALES.md step 5 describes the VM loop; plus offline start, clock moved, 6th PC. |
+| P13 | Paid features: trial, keys, PC limit, offline, clock, refund | PARTIAL | VM 2026-11-12 with a test-only product id: trial start, 2 days left, trial ended (window before desktop), wrong key, no internet, clock back, close exits: all PASS; license window at 150% fixed (FC-35); future-clock lockout fixed (FC-36). Needs Rex's Gumroad product: valid key, 6th PC, refund. |
 | P14 | Support path, watch period | NOT DONE | SupportEmail empty in Sales.cs. |
 | **GO / NO-GO** | | **NO-GO** | Open items above. |
 
@@ -90,3 +90,8 @@ VM state after this round: VBoxSVGA graphics, two monitors, test user at 150% sc
 6. Version number, CHANGELOG.md, THIRD-PARTY-NOTICES, severity for each open FC issue.
 7. Code signing (Rex: Azure Artifact Signing or OV certificate), EULA, refund and privacy policy, support email.
 8. Release candidate, full regression on it, alpha period, beta or written skip, go/no-go.
+
+
+## Round 2 — 2026-11-12
+
+Fixes: FC-30 (emoji labels), FC-31 (failed save shown), FC-35 (dialogs at 150%), FC-36 (paying buyer locked out after a future clock). Version 1.0.0, CHANGELOG.md, THIRD-PARTY-NOTICES.txt. Paid version tested in the VM (FC-37). Exploratory churn session passed. 8-hour soak started 00:37 on the final development build (results in the VM at `C:\orgodesk-test\soak.log` and `[x-soak]` lines).

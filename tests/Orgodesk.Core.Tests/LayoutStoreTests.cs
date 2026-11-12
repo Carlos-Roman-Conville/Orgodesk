@@ -183,4 +183,19 @@ public class LayoutStoreTests : IDisposable
         new LayoutStore(_root).LoadSettings();
         Assert.Single(Directory.GetFiles(_root, "settings.json.corrupt-*"));
     }
+
+    [Fact]
+    public void FailedSave_Throws_AndLeavesNoTempFile()
+    {
+        // FC-31: the app reports the failure; the store must not leave layout.json.tmp behind.
+        var store = new LayoutStore(_root);
+        store.SaveLayout(SampleLayout());
+        File.SetAttributes(store.LayoutPath, FileAttributes.ReadOnly);
+        try
+        {
+            Assert.ThrowsAny<Exception>(() => store.SaveLayout(SampleLayout()));
+            Assert.False(File.Exists(store.LayoutPath + ".tmp"));
+        }
+        finally { File.SetAttributes(store.LayoutPath, FileAttributes.Normal); }
+    }
 }

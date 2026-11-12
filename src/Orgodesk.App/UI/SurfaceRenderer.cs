@@ -41,6 +41,17 @@ public sealed class SurfaceRenderer : IDisposable
         return f;
     }
 
+    /// <summary>
+    /// GDI+ has no font fallback, so emoji (characters outside the basic plane) draw as empty boxes in most fonts.
+    /// Labels that contain them are drawn in Segoe UI Emoji, which also covers Latin letters and accents (FC-30).
+    /// </summary>
+    private Font LabelFontFor(string text, string family, float sizePt, FontStyle style)
+    {
+        foreach (var c in text)
+            if (char.IsSurrogate(c)) return Font("Segoe UI Emoji", sizePt, style);
+        return Font(family, sizePt, style);
+    }
+
     public void ClearFonts()
     {
         foreach (var f in _fonts.Values) f.Dispose();
@@ -172,7 +183,7 @@ public sealed class SurfaceRenderer : IDisposable
             var tr = new Rectangle(titleBar.X + m.Padding + 2, titleBar.Y, titleBar.Width - 2 * m.Padding - 4, titleBar.Height);
             string title = fence.Title;
             if (fence.IsPortal && string.IsNullOrWhiteSpace(title)) title = Path.GetFileName(fence.PortalPath!.TrimEnd('\\'));
-            g.DrawString(title, titleFont, tb, tr, fmt);
+            g.DrawString(title, LabelFontFor(title, s.LabelFont, titleFont.SizeInPoints, FontStyle.Bold), tb, tr, fmt);
         }
         if (fence.IsCollapsed) return;
 
@@ -230,7 +241,7 @@ public sealed class SurfaceRenderer : IDisposable
         }
 
         double scale = m.CellWidth / (double)Math.Max(1, s.CellWidth);
-        var font = Font(s.LabelFont, (float)(s.LabelFontSize * scale), FontStyle.Regular);
+        var font = LabelFontFor(item.DisplayName, s.LabelFont, (float)(s.LabelFontSize * scale), FontStyle.Regular);
         var labelRect = new Rectangle(cell.X + 2, iconRect.Bottom + 2, cell.Width - 4, Math.Max(0, cell.Bottom - iconRect.Bottom - 4));
         using var fmt = new StringFormat
         {

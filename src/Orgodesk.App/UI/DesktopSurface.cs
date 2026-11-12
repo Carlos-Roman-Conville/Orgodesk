@@ -387,10 +387,25 @@ public sealed class DesktopSurface : Control
         _saveTimer.Start();
     }
 
+    private bool _saveFailureShown;
+
     public void SaveNow()
     {
-        try { _store.SaveLayout(_model.Layout); }
-        catch (Exception ex) { Log.Error("Save failed", ex); }
+        try
+        {
+            _store.SaveLayout(_model.Layout);
+            _saveFailureShown = false;
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Save failed", ex);
+            // FC-31: tell the user once per failure streak, not on every retry.
+            if (_saveFailureShown || _closing) return;
+            _saveFailureShown = true;
+            var text = $"Orgodesk couldn't save your layout:\n{ex.Message}\n\nChanges since the last save will be lost when Orgodesk closes. " +
+                       $"Check that this folder isn't read-only or blocked by your antivirus:\n{_store.RootDir}";
+            try { BeginInvoke(new Action(() => MessageBox.Show(text, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Warning))); } catch { }
+        }
     }
 
     /// <summary>Re-reads settings-dependent caches and redraws.</summary>
