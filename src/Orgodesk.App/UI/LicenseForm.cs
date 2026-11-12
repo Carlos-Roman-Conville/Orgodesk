@@ -15,6 +15,10 @@ public sealed class LicenseForm : Form
     private readonly Button _activate = new() { Text = "Activate", Width = 100 };
     private readonly Label _result = new() { AutoSize = false, Width = 440, Height = 40 };
 
+    // In a high-contrast theme fixed reds and greens can be unreadable; use the theme's own text color there.
+    private static Color Bad => SystemInformation.HighContrast ? SystemColors.ControlText : Color.Firebrick;
+    private static Color Good => SystemInformation.HighContrast ? SystemColors.ControlText : Color.ForestGreen;
+
     public LicenseStatus Status { get; private set; }
 
     public LicenseForm(LicenseStore store, LicenseRecord record, SalesConfig cfg)
@@ -69,7 +73,7 @@ public sealed class LicenseForm : Form
             LicenseState.Expired => Status.Message + " Your Orgos and layout are saved; enter a key to bring them back.",
             _ => Status.Message,
         };
-        _status.ForeColor = Status.State == LicenseState.Expired ? Color.Firebrick : SystemColors.ControlText;
+        _status.ForeColor = Status.State == LicenseState.Expired ? Bad : SystemColors.ControlText;
     }
 
     private async Task ActivateAsync()
@@ -89,7 +93,7 @@ public sealed class LicenseForm : Form
         try { _store.Save(_record); } catch (Exception ex) { Log.Error("Could not save license.json", ex); }
         Status = LicenseRules.Evaluate(_record, _cfg, now);
         _result.Text = res.Message;
-        _result.ForeColor = res.Outcome == VerifyOutcome.Valid ? Color.ForestGreen : Color.Firebrick;
+        _result.ForeColor = res.Outcome == VerifyOutcome.Valid ? Good : Bad;
         _activate.Enabled = true;
         Log.Info($"License activation: {res.Outcome}");
         ShowStatus();

@@ -19,6 +19,9 @@ Work toward the first public release, 1.0.0. The version number in `Orgodesk.App
 - Uninstall from Settings > Apps removes the program; it asks whether to keep your Orgos.
 
 ### Fixed
+- A refused activation at the limit still used up an activation, and so did every retry (FC-41).
+- After a crash, the desktop could be left with no icons behind the license window (FC-42).
+- License messages were hard to read in a high-contrast theme.
 - Reinstalling on the same PC used up another license activation (FC-40).
 - A paying buyer was locked out after the PC clock had once been set to a future date (a successful key check now resets the clock guard) (FC-36).
 - Dialogs (license, settings, snapshots, rule edit, Orgo properties) were clipped at 125–200% display scaling (FC-35).
