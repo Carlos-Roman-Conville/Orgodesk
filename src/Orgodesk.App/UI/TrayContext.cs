@@ -163,7 +163,7 @@ public sealed class TrayContext : ApplicationContext
     private void ShowLicense()
     {
         using var dlg = new LicenseForm(_licenseStore, _license, Sales.Config);
-        dlg.ShowDialog();
+        dlg.ShowDialog(DialogOwner.Get());
     }
 
     /// <summary>Confirms a stored key with Gumroad about once a week. Offline is fine: the grace period covers it.</summary>
@@ -183,7 +183,7 @@ public sealed class TrayContext : ApplicationContext
     private void ShowSnapshots()
     {
         using var dlg = new SnapshotsForm(_store, _model, _surface);
-        dlg.ShowDialog();
+        dlg.ShowDialog(DialogOwner.Get());
     }
 
     public void Exit()

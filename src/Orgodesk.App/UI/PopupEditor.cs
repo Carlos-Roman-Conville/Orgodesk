@@ -81,7 +81,7 @@ public static class Prompt
         form.AcceptButton = ok;
         form.CancelButton = cancel;
         box.SelectAll();
-        var result = owner != null ? form.ShowDialog(owner) : form.ShowDialog();
+        var result = form.ShowDialog(owner ?? DialogOwner.Get());   // never Explorer's desktop (FC-38)
         return result == DialogResult.OK ? box.Text : null;
     }
 }

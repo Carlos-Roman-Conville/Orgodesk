@@ -60,6 +60,22 @@ public static class DesktopWindows
     /// persisted, so a crash cannot leave the desktop empty after a reboot). The desktop's own toggle command
     /// is only a fallback: it flips a registry value and Explorer can take many seconds to apply it.
     /// </summary>
+    /// <summary>
+    /// Re-enables Explorer's desktop window if it was left disabled (by a dialog of an earlier Orgodesk that was closed
+    /// or killed while the dialog was open; FC-38). Returns true if it had to be repaired.
+    /// </summary>
+    public static bool RepairDisabledDesktop()
+    {
+        bool repaired = false;
+        foreach (var h in new[] { FindProgman(), FindDefView() })
+        {
+            if (h == IntPtr.Zero || User32.IsWindowEnabled(h)) continue;
+            User32.EnableWindow(h, true);
+            repaired = true;
+        }
+        return repaired;
+    }
+
     public static bool SetDesktopIconsVisible(bool visible)
     {
         var defView = FindDefView();

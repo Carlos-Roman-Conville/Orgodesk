@@ -123,6 +123,7 @@ public sealed class DesktopSurface : Control
     {
         var defView = DesktopWindows.FindDefView();
         if (defView == IntPtr.Zero) return false;
+        if (DesktopWindows.RepairDisabledDesktop()) Log.Error("Explorer's desktop window was disabled (left over from a closed dialog); re-enabled it");
         _parentHwnd = defView;
         _screen = ScreenInfo.VirtualScreen;
         if (IsHandleCreated) RecreateHandle(); else CreateHandle();
@@ -154,7 +155,7 @@ public sealed class DesktopSurface : Control
         if (problems.Count == 0) return;
         foreach (var p in problems) Log.Error(p);
         var text = string.Join(Environment.NewLine + Environment.NewLine, problems);
-        void Show() => MessageBox.Show(text, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        void Show() => MessageBox.Show(DialogOwner.Get(), text, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         if (IsHandleCreated) BeginInvoke(new Action(Show)); else Show();
     }
 
@@ -404,7 +405,7 @@ public sealed class DesktopSurface : Control
             _saveFailureShown = true;
             var text = $"Orgodesk couldn't save your layout:\n{ex.Message}\n\nChanges since the last save will be lost when Orgodesk closes. " +
                        $"Check that this folder isn't read-only or blocked by your antivirus:\n{_store.RootDir}";
-            try { BeginInvoke(new Action(() => MessageBox.Show(text, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Warning))); } catch { }
+            try { BeginInvoke(new Action(() => MessageBox.Show(DialogOwner.Get(), text, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Warning))); } catch { }
         }
     }
 
@@ -562,7 +563,7 @@ public sealed class DesktopSurface : Control
         var list = _model.Layout.Presets;
         if (index < 0 || index >= list.Count) return;
         var p = list[index];
-        if (MessageBox.Show($"Delete preset \"{p.Name}\"? The desktop stays as it is.", "Orgodesk",
+        if (MessageBox.Show(DialogOwner.Get(), $"Delete preset \"{p.Name}\"? The desktop stays as it is.", "Orgodesk",
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK) return;
         Presets.Delete(_model.Layout, p.Id);
         SaveSoon();
@@ -611,7 +612,7 @@ public sealed class DesktopSurface : Control
         var layout = _model.Layout;
         if (layout.Pages.Count <= 1) return;
         var page = layout.ActivePage;
-        if (MessageBox.Show($"Delete page \"{page.Name}\"? Its Orgos are removed and its icons move to the first page.",
+        if (MessageBox.Show(DialogOwner.Get(), $"Delete page \"{page.Name}\"? Its Orgos are removed and its icons move to the first page.",
                 "Orgodesk", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK) return;
         var area = ScreenInfo.PrimaryWorkArea;
         var m = _renderer.MetricsAt(area.Location);
@@ -1314,7 +1315,7 @@ public sealed class DesktopSurface : Control
             case IdNewPortal:
             {
                 using var dlg = new FolderBrowserDialog { Description = "Choose the folder this portal shows", UseDescriptionForTitle = true };
-                if (dlg.ShowDialog() != DialogResult.OK) break;
+                if (dlg.ShowDialog(DialogOwner.Get()) != DialogResult.OK) break;
                 var m = _renderer.MetricsAt(screenPt);
                 CreateFence(new Rectangle(screenPt.X, screenPt.Y, m.CellWidth * 4 + 2 * m.Padding, m.TitleBarHeight + m.CellHeight * 3 + 2 * m.Padding), null, dlg.SelectedPath);
                 break;
@@ -1382,7 +1383,7 @@ public sealed class DesktopSurface : Control
         menu.Items.Add("Create folder portal here...", null, (_, _) =>
         {
             using var dlg = new FolderBrowserDialog { Description = "Choose the folder this portal shows", UseDescriptionForTitle = true };
-            if (dlg.ShowDialog() == DialogResult.OK) CreateFence(rect, null, dlg.SelectedPath);
+            if (dlg.ShowDialog(DialogOwner.Get()) == DialogResult.OK) CreateFence(rect, null, dlg.SelectedPath);
         });
         menu.Items.Add("Cancel");
         menu.Closed += (_, _) => { BeginInvoke(new Action(menu.Dispose)); RequestRender(); };
@@ -1410,7 +1411,7 @@ public sealed class DesktopSurface : Control
     public void EditFence(Fence fence)
     {
         using var dlg = new FencePropertiesForm(fence, _model.Settings);
-        if (dlg.ShowDialog() != DialogResult.OK) return;
+        if (dlg.ShowDialog(DialogOwner.Get()) != DialogResult.OK) return;
         bool portalChanged = dlg.Apply(fence);
         EvictUnderFences();
         if (portalChanged) { _model.RefreshPortals(); _watcher?.SetWatchedFolders(_model.PortalPaths()); }
