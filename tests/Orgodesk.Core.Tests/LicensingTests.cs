@@ -165,4 +165,39 @@ public class LicensingTests : IDisposable
         Assert.Equal(LicenseState.Licensed, LicenseRules.Evaluate(r, Cfg, T0.AddDays(2)).State);
         Assert.Equal(LicenseState.Licensed, LicenseRules.Evaluate(r, Cfg, T0.AddDays(20)).State);
     }
+
+    /// <summary>Stand-in for Gumroad: counts uses per key and records whether each call asked to increment.</summary>
+    private sealed class FakeGumroad : HttpMessageHandler
+    {
+        public int Uses; public readonly List<bool> Increments = new();
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            var body = await request.Content!.ReadAsStringAsync(ct);
+            bool inc = body.Contains("increment_uses_count=true");
+            Increments.Add(inc);
+            if (inc) Uses++;
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent($"{{\"success\":true,\"uses\":{Uses},\"purchase\":{{}}}}") };
+        }
+    }
+
+    [Fact]
+    public async Task Activate_AtTheLimit_IsRefused_WithoutRaisingTheCount()
+    {
+        // FC-41: a refused attempt must not count, or retries push the buyer further over the limit.
+        var fake = new FakeGumroad { Uses = 5 };
+        var res = await new GumroadVerifier(Cfg, fake).ActivateAsync("KEY");
+        Assert.Equal(VerifyOutcome.TooManyActivations, res.Outcome);
+        Assert.Equal(5, fake.Uses);
+        Assert.DoesNotContain(true, fake.Increments);
+    }
+
+    [Fact]
+    public async Task Activate_WithRoom_CountsExactlyOnce()
+    {
+        var fake = new FakeGumroad { Uses = 4 };
+        var res = await new GumroadVerifier(Cfg, fake).ActivateAsync("KEY");
+        Assert.Equal(VerifyOutcome.Valid, res.Outcome);
+        Assert.Equal(5, fake.Uses);
+        Assert.Equal(new[] { false, true }, fake.Increments);
+    }
 }

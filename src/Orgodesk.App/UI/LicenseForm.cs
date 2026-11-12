@@ -81,7 +81,8 @@ public sealed class LicenseForm : Form
         // Count an activation only the first time this key is activated on this Windows account (FC-40):
         // a reinstall or a deleted data folder on the same PC must not use up another one.
         bool activate = (key != _record.Key || _record.LastVerifiedUtc == null) && !ActivationMarker.Has(key);
-        var res = await new GumroadVerifier(_cfg).VerifyAsync(key, activate);
+        var verifier = new GumroadVerifier(_cfg);
+        var res = activate ? await verifier.ActivateAsync(key) : await verifier.VerifyAsync(key, activate: false);
         var now = DateTime.UtcNow;
         GumroadVerifier.Apply(_record, key, res, now);
         if (res.Outcome == VerifyOutcome.Valid) ActivationMarker.Set(key);

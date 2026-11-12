@@ -92,6 +92,9 @@ internal static class Program
         Log.Info($"License state: {status.State} ({status.Message})");
         if (!status.CanRun)
         {
+            // If an earlier Orgodesk was killed or crashed, Explorer's own icons are still hidden. Orgodesk isn't going
+            // to draw the desktop now, so give the normal icons back before showing the license window (FC-42).
+            try { DesktopWindows.SetDesktopIconsVisible(true); TrayContext.ClearHiddenFlag(); } catch { }
             using var form = new LicenseForm(licenseStore, license, Sales.Config);
             form.ShowDialog();
             if (!form.Status.CanRun) return 3;

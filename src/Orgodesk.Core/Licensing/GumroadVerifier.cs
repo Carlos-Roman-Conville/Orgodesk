@@ -5,7 +5,7 @@ namespace Orgodesk.Core.Licensing;
 
 public enum VerifyOutcome { Valid, Invalid, Revoked, TooManyActivations, NetworkError }
 
-public sealed record VerifyResult(VerifyOutcome Outcome, string Message);
+public sealed record VerifyResult(VerifyOutcome Outcome, string Message, int? Uses = null);
 
 /// <summary>
 /// Checks a key with Gumroad's license API (POST https://api.gumroad.com/v2/licenses/verify).
@@ -49,6 +49,21 @@ public sealed class GumroadVerifier
         return Interpret(resp.StatusCode, body, activate);
     }
 
+    /// <summary>
+    /// First activation of a key on a PC (FC-41). Looks at the count first without changing it, and only counts the
+    /// activation when there is room. A refused attempt must not raise the count, or every retry would push the buyer
+    /// further over the limit and a support reset would be undone by the next try.
+    /// </summary>
+    public async Task<VerifyResult> ActivateAsync(string key, CancellationToken ct = default)
+    {
+        var peek = await VerifyAsync(key, activate: false, ct).ConfigureAwait(false);
+        if (peek.Outcome != VerifyOutcome.Valid) return peek;
+        if (peek.Uses is int uses && uses >= _cfg.MaxActivations)
+            return new VerifyResult(VerifyOutcome.TooManyActivations,
+                $"This key has already been activated {uses} times; the limit is {_cfg.MaxActivations} PCs. Contact support to reset it.", uses);
+        return await VerifyAsync(key, activate: true, ct).ConfigureAwait(false);
+    }
+
     public VerifyResult Interpret(HttpStatusCode status, string body, bool activate)
     {
         JsonElement root;
@@ -70,10 +85,11 @@ public sealed class GumroadVerifier
             if (Flag(p, "refunded") || Flag(p, "chargebacked") || Flag(p, "disputed"))
                 return new VerifyResult(VerifyOutcome.Revoked, "This purchase was refunded or disputed, so the key no longer works.");
         }
-        if (activate && root.TryGetProperty("uses", out var u) && u.TryGetInt32(out int uses) && uses > _cfg.MaxActivations)
+        int? count = root.TryGetProperty("uses", out var u) && u.TryGetInt32(out int n) ? n : null;
+        if (activate && count is int uses && uses > _cfg.MaxActivations)
             return new VerifyResult(VerifyOutcome.TooManyActivations,
-                $"This key has been activated {uses} times; the limit is {_cfg.MaxActivations} PCs. Contact support to reset it.");
-        return new VerifyResult(VerifyOutcome.Valid, "License activated. Thank you for buying Orgodesk!");
+                $"This key has been activated {uses} times; the limit is {_cfg.MaxActivations} PCs. Contact support to reset it.", uses);
+        return new VerifyResult(VerifyOutcome.Valid, "License activated. Thank you for buying Orgodesk!", count);
     }
 
     private static bool Flag(JsonElement p, string name) => p.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.True;
