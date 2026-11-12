@@ -104,6 +104,16 @@ which is what makes true self-service deactivation possible.
 
 > Windows may show "Windows protected your PC" the first time, because Orgodesk is from a new, independent developer.
 > Click **More info**, then **Run anyway**. You only need to do this once.
+>
+> If your PC has **Smart App Control** turned on, Windows blocks apps that aren't code-signed yet and gives no
+> "Run anyway" button. Orgodesk isn't signed yet. Try the free trial first; if it's blocked on your PC and you already
+> bought, you get a full refund.
+
+**Refund line for the page:** 30-day money-back guarantee, no reason needed (full text: `legal/REFUNDS.md`). Set
+Gumroad's account refund policy to "30-day money back guarantee" so the two match.
+
+**Unsigned for now (Rex, 2026-11-12):** Orgodesk ships unsigned until sales cover the roughly $10 a month for signing.
+Revisit then: Azure Artifact Signing, added as one step in `release.bat`.
 
 ## README-buyers.txt (ships in the zip)
 
