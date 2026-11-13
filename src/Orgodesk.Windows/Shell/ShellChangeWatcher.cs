@@ -39,6 +39,12 @@ public sealed class ShellChangeWatcher : NativeWindow, IDisposable
         Register();
     }
 
+    /// <summary>
+    /// Registers again from scratch. Explorer holds the registrations, so they die when Explorer restarts and
+    /// no more notifications arrive until this is called (FC-45).
+    /// </summary>
+    public void Reregister() => Register();
+
     private void Register()
     {
         Unregister();

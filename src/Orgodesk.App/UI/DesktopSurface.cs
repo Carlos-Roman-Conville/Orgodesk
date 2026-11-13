@@ -143,6 +143,12 @@ public sealed class DesktopSurface : Control
                 Log.Error("Shell change watcher failed; falling back to manual refresh", ex);
             }
         }
+        else
+        {
+            // Attaching again means Explorer restarted, and the old registrations went with it (FC-45).
+            try { _watcher.Reregister(); ScheduleRefresh(); }
+            catch (Exception ex) { Log.Error("Shell change watcher could not re-register after Explorer restarted", ex); }
+        }
         _watchdog.Start();
         ReportLoadProblems();
         return IsHandleCreated;
