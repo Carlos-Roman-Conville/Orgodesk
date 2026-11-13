@@ -1,6 +1,6 @@
 # Orgodesk End-User License Agreement
 
-*Draft, not yet reviewed by a lawyer. Effective date: [DATE]. Seller: CRC Solutions, [STATE], USA ("we", "us").*
+*Draft, not yet reviewed by a lawyer. Effective date: 13 November 2026. Seller: CRC Solutions, New Jersey, USA ("we", "us").*
 
 Please read this agreement before installing or using Orgodesk ("the Software"). By installing or using the Software
 you agree to it. If you do not agree, do not install or use the Software; if you already paid, see the Refund Policy.
@@ -82,7 +82,7 @@ You may not use or export the Software where United States law prohibits it.
 
 ## 13. General
 
-This agreement is governed by the laws of [STATE], USA, without regard to its conflict-of-law rules; if you are a
+This agreement is governed by the laws of New Jersey, USA, without regard to its conflict-of-law rules; if you are a
 consumer, the mandatory protections of the law where you live still apply to you. If a part of this agreement is found
 unenforceable, the rest stays in effect. This agreement, with the Refund Policy and Privacy Policy, is the whole
 agreement between you and us about the Software. We may update this agreement for future versions; the version that

@@ -42,6 +42,7 @@ public sealed class SettingsForm : Form
     private readonly NumericUpDown _swipe = new() { Minimum = 40, Maximum = 600, Width = 70 };
     private readonly CheckBox _dots = new() { Text = "Show page indicator dots", AutoSize = true };
     private readonly CheckBox _autostart = new() { Text = "Start with Windows", AutoSize = true };
+    private readonly CheckBox _updates = new() { Text = "Tell me when a new version is out (checks once a day; nothing is installed for you)", AutoSize = true };
 
     // Rules
     private readonly ListView _rules = new() { View = View.Details, FullRowSelect = true, HideSelection = false, MultiSelect = false, Dock = DockStyle.Fill, CheckBoxes = true };
@@ -140,6 +141,7 @@ public sealed class SettingsForm : Form
         Row(t, "Swipe distance (px)", _swipe);
         Row(t, "", _dots);
         Row(t, "", _autostart);
+        if (Sales.UpdateUrl.Length > 0) Row(t, "", _updates);
         var help = new Label
         {
             AutoSize = true, MaximumSize = new Size(560, 0), Padding = new Padding(10),
@@ -211,6 +213,7 @@ public sealed class SettingsForm : Form
         _swipe.Value = Math.Clamp(s.PageSwipeThreshold, 40, 600);
         _dots.Checked = s.ShowPageIndicator;
         _autostart.Checked = s.StartWithWindows;
+        _updates.Checked = s.CheckForUpdates;
         _ruleList = _model.Layout.Rules.Select(r => r.Clone()).ToList();
         RefreshFenceList();
     }
@@ -355,6 +358,7 @@ public sealed class SettingsForm : Form
         s.PageSwipeThreshold = (int)_swipe.Value;
         s.ShowPageIndicator = _dots.Checked;
         s.StartWithWindows = _autostart.Checked;
+        s.CheckForUpdates = _updates.Checked;
         try { _store.SaveSettings(s); } catch (Exception ex) { Log.Error("Save settings failed", ex); }
         try { AutoStart.SetEnabled(s.StartWithWindows, Application.ExecutablePath); } catch (Exception ex) { Log.Error("Autostart failed", ex); }
         SaveRules();

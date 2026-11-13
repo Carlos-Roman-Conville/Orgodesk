@@ -11,6 +11,7 @@ Work toward the first public release, 1.0.0. The version number in `Orgodesk.App
 - Layout backup: each clean start keeps `layout.json.bak`; a damaged layout is restored from it and the user is told.
 - The layout records the display scale it was laid out at, and converts when the scale changes.
 - `THIRD-PARTY-NOTICES.txt` for the bundled .NET runtime and Windows Forms.
+- New-version notice: once a day Orgodesk reads a small version file and shows a tray notice with a link when a newer version is out. It never downloads or installs anything. Tick box in Settings; "Check for a new version now" in the tray menu.
 
 ### Changed
 - Built on .NET 10 (was .NET 8, whose support ended 2026-11-10). The download is smaller (about 107 MB, was 145 MB).

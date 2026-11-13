@@ -15,11 +15,12 @@ app actually does (checked in the code). Whether a lawyer reviews them before re
 | Blank | Where | Notes |
 |---|---|---|
 | Seller name | all three | **Filled 2026-11-12: CRC Solutions** (Rex's decision; a separate software name can come later). If CRC Solutions is not a registered company, the accurate form is "<your name>, doing business as CRC Solutions": change it before release. |
-| `[STATE]` | EULA, PRIVACY | The US state whose law governs (where you or the business are based). |
+| `[STATE]` | EULA, PRIVACY | **Filled 2026-11-13: New Jersey** (Rex). |
 | Support email | all three, README-buyers.txt, Sales.cs | **Filled 2026-11-12: support@crc-solutions.org**, forwarded free to Rex's Gmail by Cloudflare Email Routing (the paid Google Workspace mailbox lapsed in September 2026). **Working 2026-11-12:** MX and SPF point at Cloudflare, routing Enabled, and a test message shows as received and forwarded in Cloudflare's log. The test was sent from the same Gmail it forwards to, and Gmail hides its own returning copy, so before release send one from a different account and see it land in the inbox. Replies go out from the Gmail address unless "Send mail as" is set up. No DMARC record on the domain yet. |
-| `[DATE]` | all three | The day the product page goes live. |
+| `[DATE]` | all three | **Filled 2026-11-13: 13 November 2026** (Rex: "today"). Change it if the texts change again before the product page goes live. |
 | `[2]` years for support emails | PRIVACY | Change if you keep them longer or shorter. |
-| Update emails | PRIVACY ("Your purchase") | Say yes or no to emailing buyers about new versions. |
+| Update emails | PRIVACY ("Your purchase") | **Decided 2026-11-13:** no update emails. Orgodesk shows an in-app notice instead (tray balloon + menu entry, tick box in Settings, on by default). PRIVACY also says Gumroad may email buyers about a serious fix (security or data loss); remove that sentence if you never want to. |
+| `[UPDATE HOST]` | PRIVACY (table) | Where the version file lives, once chosen (see SALES.md "Update notice"). Must match `UpdateUrl` in Sales.cs. If the release ships with `UpdateUrl` empty, delete the version-file row and the sentence about it in "The short version". |
 
 ## What the drafts are built from
 

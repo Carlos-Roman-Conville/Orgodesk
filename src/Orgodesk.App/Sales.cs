@@ -13,6 +13,12 @@ internal static class Sales
     public const string ProductId = "";
     public const string BuyUrl = "";
     public const string SupportEmail = "support@crc-solutions.org";
+    /// <summary>
+    /// Address of the version file Orgodesk reads once a day to say "a new version is out", e.g.
+    /// {"version":"1.0.1","url":"https://.../download page","notes":"What changed"}. Must be https.
+    /// Empty = no update check and no update entries in the menus.
+    /// </summary>
+    public const string UpdateUrl = "";
 
     public static readonly SalesConfig Config = new(ProductId, BuyUrl);
 }

@@ -1,6 +1,6 @@
 # Orgodesk Refund Policy
 
-*Draft, not yet reviewed by a lawyer. Effective date: [DATE].*
+*Draft, not yet reviewed by a lawyer. Effective date: 13 November 2026.*
 
 **30-day money-back guarantee.** If Orgodesk doesn't work for you, ask for a refund within 30 days of your purchase
 and you will get all of your money back. You don't have to give a reason.

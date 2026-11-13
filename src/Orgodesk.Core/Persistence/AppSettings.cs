@@ -34,6 +34,10 @@ public sealed class AppSettings
     // silently remove the start-with-Windows entry that --install wrote (FC-26). An explicit false is kept.
     public bool StartWithWindows { get; set; } = true;
     public bool ShowPageIndicator { get; set; } = true;
+    // Once a day, read the seller's small version file and say when a newer version is out. Nothing is installed.
+    public bool CheckForUpdates { get; set; } = true;
+    // The version the buyer has already been told about, so the balloon shows once per release.
+    public string? UpdateNoticeShownFor { get; set; }
 
     public AppSettings Clone() => (AppSettings)MemberwiseClone();
 }

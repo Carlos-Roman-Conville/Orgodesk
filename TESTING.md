@@ -83,7 +83,7 @@ Severity levels and exit criteria exactly as in `HQ\testing\PRODUCTION.md` secti
 | P16 | Bare exe and zip scanned (Defender + VirusTotal) | NOT DONE | Do at the RC, after the .NET 10 move. |
 | P17 | Tax, EU withdrawal consent, name search | PARTIAL | Gumroad is merchant of record (EU/UK VAT certain; Rex confirms US sales tax on Gumroad's tax page). Web search 2026-11-12 found no product or mark named "Orgodesk"; nearest is a registered Class 9 mark "ORGO" (Rex decides whether to check USPTO/EUIPO himself or with a lawyer). Refund draft doesn't undercut EU rights. |
 | P18 | Repo visibility decided; no secrets | **NEEDS DECISION** | The GitHub repo is PUBLIC and has no license file: the full source, the license check and SALES.md (launch plan) are readable by anyone, and a development build has no trial or key. No secrets are in it (product id empty). Rex decides: make it private, or keep it public on purpose. |
-| P19 | Update notice, 2FA, backups | NOT DONE | No written way to tell buyers about a fix yet (Gumroad can email customers); account 2FA and off-PC backup are Rex's to confirm. |
+| P19 | Update notice, 2FA, backups | PARTLY | 2026-11-13: in-app new-version notice built (reads a version file once a day; tray balloon and menu entry; Settings tick box; never installs). 15 unit tests. Not yet tested in the VM, and `UpdateUrl` in Sales.cs is empty until Rex picks where the file lives. Account 2FA and off-PC backup are Rex's to confirm. |
 | **GO / NO-GO** | | **NO-GO** | Open items above. |
 
 ### Gaps to close before release (in order)
@@ -121,3 +121,5 @@ Real-mouse recheck on the .NET 10 build (2026-11-12 04:51, VM at 150%): click se
 2026-11-12: seller and publisher name set to CRC Solutions (Rex). Shown in the legal drafts, the exe file details and Settings > Apps. Still blank: state, support email, effective date.
 
 2026-11-12: support email filled (support@crc-solutions.org, Cloudflare Email Routing to Rex's Gmail) and forwarding confirmed in Cloudflare's log.
+
+2026-11-13: legal blanks filled (New Jersey; effective 13 November 2026; no update emails). New-version notice added (86 unit tests pass). Still blank: `[2]` years for support emails, `[UPDATE HOST]` and `UpdateUrl`. The sleep, lock and second-account checks move to the VM (after the soak); Remote Desktop into the PC is not possible on Windows 11 Home, so that check is not applicable there.

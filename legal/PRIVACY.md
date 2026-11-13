@@ -1,14 +1,15 @@
 # Orgodesk Privacy Policy
 
-*Draft, not yet reviewed by a lawyer. Effective date: [DATE].*
+*Draft, not yet reviewed by a lawyer. Effective date: 13 November 2026.*
 
 This policy covers the Orgodesk desktop program and its sale. The seller and data controller is
-CRC Solutions, [STATE], USA. Contact: support@crc-solutions.org.
+CRC Solutions, New Jersey, USA. Contact: support@crc-solutions.org.
 
 ## The short version
 
-Orgodesk does not track you. It has no analytics, no advertising, no crash upload and no account. The only thing it
-sends over the internet is your license key, to check that the key is valid.
+Orgodesk does not track you. It has no analytics, no advertising, no crash upload and no account. It uses the
+internet for two things only: it sends your license key to check that the key is valid, and once a day it reads a
+small file from our website to see whether a new version is out. You can turn the version check off in Settings.
 
 ## What stays on your PC
 
@@ -24,9 +25,12 @@ Orgodesk stores these on your computer only, and never sends them anywhere:
 |---|---|---|---|
 | Your license key and Orgodesk's product id | Gumroad, Inc. (USA), the store that issued the key | When you activate a key, and about once a week after | To provide the licensed software you bought (performance of a contract) and to prevent misuse of keys (legitimate interest) |
 
+| A plain request for our version file. It carries no license key, no identifier and nothing about you or your PC | [UPDATE HOST], where we publish the file | At start and once a day, while "Tell me when a new version is out" is ticked in Settings; and when you choose "Check for a new version now" | To tell you about fixes and new versions (legitimate interest). Orgodesk only shows a notice with a link; it never downloads or installs anything by itself |
+
 Gumroad answers whether the key is valid, how many times it has been activated, and whether the purchase was refunded
 or disputed. As with any internet request, Gumroad's servers also see the network (IP) address the request comes from.
-Orgodesk sends no file names, no desktop contents, no usage statistics and no device identifiers.
+The same is true of the server that holds the version file. Orgodesk sends no file names, no desktop contents, no
+usage statistics and no device identifiers.
 
 A key whose purchase was refunded, charged back or disputed stops working automatically. No other automated decisions
 are made about you.
@@ -36,8 +40,11 @@ are made about you.
 Purchases are handled by Gumroad as the seller of record: Gumroad collects your payment details and email address
 under [Gumroad's privacy policy](https://gumroad.com/privacy). We never see your card details. From Gumroad we
 receive your email address, what you bought and when, and your license key. We use this only to provide your license,
-answer support requests, handle refunds and keep the sales records the law requires. [SELLER: if you will email buyers
-about updates, say so here and that they can unsubscribe.]
+answer support requests, handle refunds and keep the sales records the law requires.
+
+We do not send marketing email. Orgodesk tells you about new versions itself (see above). The one exception: we may
+ask Gumroad to email buyers about a fix for a serious problem, such as a security issue or a risk of losing your
+layout.
 
 ## Support email
 

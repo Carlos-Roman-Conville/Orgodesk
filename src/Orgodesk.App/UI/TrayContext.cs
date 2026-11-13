@@ -3,6 +3,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Orgodesk.Core.Licensing;
 using Orgodesk.Core.Persistence;
+using Orgodesk.Core.Updates;
 using Orgodesk.Windows.Desktop;
 
 namespace Orgodesk.App.UI;
@@ -22,6 +23,9 @@ public sealed class TrayContext : ApplicationContext
     private EventWaitHandle? _exitEvent;
     private RegisteredWaitHandle? _exitWait;
     private bool _exiting;
+    private UpdateInfo? _update;
+    private bool _updateBalloonUp;
+    private System.Windows.Forms.Timer? _updateTimer;
 
     private static string HiddenFlagPath => Path.Combine(LayoutStore.DefaultRoot, "icons-hidden.flag");
     public static void ClearHiddenFlag() { try { File.Delete(HiddenFlagPath); } catch { } }
@@ -47,6 +51,8 @@ public sealed class TrayContext : ApplicationContext
             ContextMenuStrip = BuildTrayMenu(),
         };
         _tray.DoubleClick += (_, _) => ShowSettings();
+        _tray.BalloonTipClicked += (_, _) => { if (_updateBalloonUp) OpenUpdatePage(); };
+        _tray.BalloonTipClosed += (_, _) => _updateBalloonUp = false;
     }
 
     /// <summary>Hides the real desktop icons and attaches the surface. False if the desktop could not be found.</summary>
@@ -88,6 +94,13 @@ public sealed class TrayContext : ApplicationContext
         if (lic.State == LicenseState.Trial && lic.TrialDaysLeft <= 3)
             _tray.ShowBalloonTip(8000, "Orgodesk", $"{lic.Message}. Right-click the tray icon and choose License to buy a key.", ToolTipIcon.Info);
         _ = RecheckLicenseAsync();
+        if (Sales.UpdateUrl.Length > 0)
+        {
+            _updateTimer = new System.Windows.Forms.Timer { Interval = 24 * 60 * 60 * 1000 };
+            _updateTimer.Tick += (_, _) => _ = CheckForUpdateAsync(byHand: false);
+            _updateTimer.Start();
+            _ = CheckForUpdateAsync(byHand: false);
+        }
         return true;
     }
 
@@ -101,6 +114,11 @@ public sealed class TrayContext : ApplicationContext
             if (lic.State == LicenseState.Trial)
             {
                 menu.Items.Add($"{lic.Message}: buy or enter a key...", null, (_, _) => ShowLicense());
+                menu.Items.Add(new ToolStripSeparator());
+            }
+            if (_update != null)
+            {
+                menu.Items.Add($"Orgodesk {VersionText(_update.Version)} is out: open the download page", null, (_, _) => OpenUpdatePage());
                 menu.Items.Add(new ToolStripSeparator());
             }
             menu.Items.Add("Settings...", null, (_, _) => ShowSettings());
@@ -144,6 +162,7 @@ public sealed class TrayContext : ApplicationContext
             if (lic.State != LicenseState.DevBuild) menu.Items.Add("License...", null, (_, _) => ShowLicense());
             var ver = typeof(TrayContext).Assembly.GetName().Version;
             menu.Items.Add(new ToolStripMenuItem($"Orgodesk {ver?.Major}.{ver?.Minor}.{ver?.Build}") { Enabled = false });   // so a support message can name the build
+            if (Sales.UpdateUrl.Length > 0) menu.Items.Add("Check for a new version now", null, (_, _) => _ = CheckForUpdateAsync(byHand: true));
             menu.Items.Add("Open settings folder", null, (_, _) => Windows.Shell.ShellActions.OpenPath(_store.RootDir, IntPtr.Zero));
             menu.Items.Add("Exit (restore desktop icons)", null, (_, _) => Exit());
         };
@@ -182,6 +201,44 @@ public sealed class TrayContext : ApplicationContext
         catch (Exception ex) { Log.Error("License recheck failed", ex); }
     }
 
+    private static string VersionText(Version v) => $"{v.Major}.{v.Minor}.{Math.Max(v.Build, 0)}";
+
+    /// <summary>
+    /// Reads the seller's version file. The automatic check respects the setting and shows its balloon once per
+    /// release; a check asked for from the menu always answers. Nothing is downloaded or installed.
+    /// </summary>
+    private async Task CheckForUpdateAsync(bool byHand)
+    {
+        if (!byHand && !_model.Settings.CheckForUpdates) return;
+        try
+        {
+            var current = typeof(TrayContext).Assembly.GetName().Version ?? new Version(0, 0, 0);
+            var found = await new UpdateChecker(Sales.UpdateUrl).CheckAsync(current).ConfigureAwait(true);
+            if (_exiting) return;
+            _update = found;
+            if (found == null)
+            {
+                if (byHand) _tray.ShowBalloonTip(6000, "Orgodesk", "No newer version found.", ToolTipIcon.Info);
+                return;
+            }
+            var text = VersionText(found.Version);
+            if (!byHand && _model.Settings.UpdateNoticeShownFor == text) return;
+            _model.Settings.UpdateNoticeShownFor = text;
+            try { _store.SaveSettings(_model.Settings); } catch (Exception ex) { Log.Error("Save settings failed", ex); }
+            Log.Info($"Update available: {text}");
+            _updateBalloonUp = true;
+            var notes = found.Notes.Length > 0 ? found.Notes + " " : "";
+            _tray.ShowBalloonTip(10000, $"Orgodesk {text} is out", notes + "Click here, or use the tray menu, to open the download page.", ToolTipIcon.Info);
+        }
+        catch (Exception ex) { Log.Error("Update check failed", ex); }
+    }
+
+    private void OpenUpdatePage()
+    {
+        _updateBalloonUp = false;
+        if (_update != null) Windows.Shell.ShellActions.OpenPath(_update.Url, IntPtr.Zero);
+    }
+
     private void ShowSnapshots()
     {
         using var dlg = new SnapshotsForm(_store, _model, _surface);
@@ -195,6 +252,8 @@ public sealed class TrayContext : ApplicationContext
         _tray.Visible = false;
         _mouseHook?.Dispose();
         _mouseHook = null;
+        _updateTimer?.Dispose();
+        _updateTimer = null;
         _exitWait?.Unregister(null);
         _surface.Shutdown();
         try { DesktopWindows.SetDesktopIconsVisible(true); } catch { }

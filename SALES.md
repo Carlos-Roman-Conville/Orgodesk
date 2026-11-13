@@ -65,6 +65,7 @@ which is what makes true self-service deactivation possible.
    - `ProductId` = the product ID from step 2
    - `BuyUrl` = the product's public link (looks like `https://<you>.gumroad.com/l/orgodesk`)
    - `SupportEmail` = the address you'll answer buyers from
+   - `UpdateUrl` = the https address of the version file (see "Update notice" below). Empty = no update notice.
 4. **Build the release.** Run `release.bat`. It runs the tests and writes `release\Orgodesk.exe`, `THIRD-PARTY-NOTICES.txt` and `CHANGELOG.md`. Zip them
    with `README-buyers.txt` (below) as `Orgodesk.zip`.
 5. **Test the full loop in your VM** before launch: fresh VM > run the exe > trial shows 14 days > make a
@@ -153,3 +154,27 @@ to them. One line in the description is enough: "Orgodesk is independent and not
 5. The tray menu and the Settings window.
 
 Use a clean wallpaper and fake file names, never your real desktop.
+
+## Update notice
+
+Orgodesk can tell buyers a new version is out. It reads one small file you host, at start and once a day:
+
+```json
+{"version": "1.0.1", "url": "https://<you>.gumroad.com/l/orgodesk", "notes": "Fixes a slow memory leak."}
+```
+
+- `version`: the newest released version. Buyers running an older one get a tray balloon (once per release) and a
+  line at the top of the tray menu. Same or older: nothing happens.
+- `url`: the page to open when they click. It must start with `https://`. Point it at the Gumroad product page:
+  buyers download the new file from their Gumroad library, and trial users from the product page.
+- `notes`: optional, one short sentence (cut at 200 characters).
+
+**Where to host it:** any plain https address you control that will not move, because every sold copy keeps asking
+that address. A file on `crc-solutions.org` is the natural choice (the domain is already on Cloudflare and stays
+yours even if the GitHub repo goes private). Do not use a GitHub raw link while the repo may go private.
+
+**To announce a release:** upload the new zip to Gumroad first, then change `version` in the file. Check it by
+choosing "Check for a new version now" in the tray menu of an older build.
+
+**What it never does:** download, install or run anything, or send anything about the buyer. Buyers can untick
+"Tell me when a new version is out" in Settings. An unreachable or broken file just means no notice.
