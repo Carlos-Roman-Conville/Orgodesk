@@ -24,7 +24,7 @@ public static class Installer
             var self = Environment.ProcessPath ?? Application.ExecutablePath;
             Directory.CreateDirectory(InstallDir);
             if (!string.Equals(Path.GetFullPath(self), Path.GetFullPath(InstalledExe), StringComparison.OrdinalIgnoreCase))
-                File.Copy(self, InstalledExe, overwrite: true);
+                CopyWhenReleased(self, InstalledExe);
 
             AutoStart.SetEnabled(true, InstalledExe);
             var store = new LayoutStore(LayoutStore.DefaultRoot);
@@ -139,6 +139,19 @@ public static class Installer
             k.SetValue("InstallDate", DateTime.Now.ToString("yyyyMMdd"));
         }
         catch (Exception ex) { Log.Error("Could not register the uninstall entry", ex); }
+    }
+
+    /// <summary>
+    /// Copies the new exe over the installed one. The copy that was just told to exit can keep its file locked
+    /// for a moment after its exit signal is gone, so retry for up to 15 seconds (FC-46).
+    /// </summary>
+    private static void CopyWhenReleased(string from, string to)
+    {
+        for (int i = 0; ; i++)
+        {
+            try { File.Copy(from, to, overwrite: true); return; }
+            catch (Exception ex) when ((ex is IOException || ex is UnauthorizedAccessException) && i < 60) { Thread.Sleep(250); }
+        }
     }
 
     private static void StopRunningInstance()
