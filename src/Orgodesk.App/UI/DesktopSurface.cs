@@ -30,6 +30,7 @@ public sealed class DesktopSurface : Control
     private readonly LayoutStore _store;
     private readonly SurfaceRenderer _renderer;
     private ShellChangeWatcher? _watcher;
+    private bool _watcherStale;   // Explorer refused the registrations; try again on the next watchdog tick
     private readonly Timer _watchdog = new() { Interval = 2000 };
     private readonly Timer _saveTimer = new() { Interval = 600 };
     private readonly Timer _refreshTimer = new() { Interval = 350 };
@@ -127,28 +128,7 @@ public sealed class DesktopSurface : Control
         _parentHwnd = defView;
         _screen = ScreenInfo.VirtualScreen;
         if (IsHandleCreated) RecreateHandle(); else CreateHandle();
-        if (_watcher == null)
-        {
-            try
-            {
-                _watcher = new ShellChangeWatcher();
-                _watcher.Changed += evt =>
-                {
-                    if (evt == Const.SHCNE_UPDATEIMAGE || evt == Const.SHCNE_ASSOCCHANGED) _model.Icons.Clear();
-                    ScheduleRefresh();
-                };
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Shell change watcher failed; falling back to manual refresh", ex);
-            }
-        }
-        else
-        {
-            // Attaching again means Explorer restarted, and the old registrations went with it (FC-45).
-            try { _watcher.Reregister(); ScheduleRefresh(); }
-            catch (Exception ex) { Log.Error("Shell change watcher could not re-register after Explorer restarted", ex); }
-        }
+        RenewWatcher();
         _watchdog.Start();
         ReportLoadProblems();
         return IsHandleCreated;
@@ -214,6 +194,39 @@ public sealed class DesktopSurface : Control
         _dib = new DibSurface(_screen.Width, _screen.Height);
     }
 
+    /// <summary>
+    /// Creates the shell change watcher, or registers it again. Explorer holds the registrations, so every time
+    /// the surface is put into a new desktop window (Explorer restarted) they must be made again, or no create,
+    /// delete or rename reaches Orgodesk (FC-45). If Explorer is not ready to take them yet, the watchdog retries.
+    /// </summary>
+    private void RenewWatcher()
+    {
+        try
+        {
+            if (_watcher == null)
+            {
+                _watcher = new ShellChangeWatcher();
+                _watcher.Changed += evt =>
+                {
+                    if (evt == Const.SHCNE_UPDATEIMAGE || evt == Const.SHCNE_ASSOCCHANGED) _model.Icons.Clear();
+                    ScheduleRefresh();
+                };
+                _watcherStale = false;
+            }
+            else
+            {
+                _watcherStale = !_watcher.Reregister();
+                if (!_watcherStale) Log.Info("Explorer restarted; watching the desktop for changes again");
+            }
+            ScheduleRefresh();   // pick up anything that changed while nothing was registered
+        }
+        catch (Exception ex)
+        {
+            _watcherStale = false;
+            Log.Error("Shell change watcher failed; falling back to manual refresh", ex);
+        }
+    }
+
     private void Watchdog()
     {
         if (_closing || _suspended) return;
@@ -227,8 +240,10 @@ public sealed class DesktopSurface : Control
             if (IsHandleCreated) RecreateHandle(); else CreateHandle();
             _lastHideAttempt = DateTime.UtcNow;
             DesktopWindows.SetDesktopIconsVisible(false);
+            RenewWatcher();
             return;
         }
+        if (_watcherStale) RenewWatcher();
         // Explorer re-shows its icon list on some events (refresh, theme or display change); hide it again.
         if (DesktopWindows.AreDesktopIconsVisible() && (DateTime.UtcNow - _lastHideAttempt) > TimeSpan.FromSeconds(2))
         {

@@ -43,7 +43,8 @@ public sealed class ShellChangeWatcher : NativeWindow, IDisposable
     /// Registers again from scratch. Explorer holds the registrations, so they die when Explorer restarts and
     /// no more notifications arrive until this is called (FC-45).
     /// </summary>
-    public void Reregister() => Register();
+    /// <returns>False when Explorer accepted none of the registrations (it may not be ready yet): call again.</returns>
+    public bool Reregister() { Register(); return _registrations.Count > 0; }
 
     private void Register()
     {
