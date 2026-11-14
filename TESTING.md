@@ -123,3 +123,43 @@ Real-mouse recheck on the .NET 10 build (2026-11-12 04:51, VM at 150%): click se
 2026-11-12: support email filled (support@crc-solutions.org, Cloudflare Email Routing to Rex's Gmail) and forwarding confirmed in Cloudflare's log.
 
 2026-11-13: legal blanks filled (New Jersey; effective 13 November 2026; no update emails). New-version notice added (86 unit tests pass). Still blank: `[2]` years for support emails, `[UPDATE HOST]` and `UpdateUrl`. The sleep, lock and second-account checks move to the VM (after the soak); Remote Desktop into the PC is not possible on Windows 11 Home, so that check is not applicable there.
+
+
+### Quality standard (every round; see [QUALITY.md](../QUALITY.md))
+
+Stage now: prototype (2026-11-14 check on d70b106)  Stage aimed at: shipped  (the bar for each stage is QUALITY.md section 3)
+
+PASS / FAIL / SKIP with one line of evidence, usually the row above that proves it. No evidence = not met.
+
+| # | Requirement | Result | Evidence |
+|---|---|---|---|
+| Q1 | Does every job the README or spec says |  | Not re-run on d70b106. Last full hands-on pass of the README jobs: 2026-11-12 real-mouse session on an earlier build; Rex's PC runs bba5714 daily with 15 Orgos. |
+| Q2 | Every rule traces to a source; nothing invented | PASS | Licence rules in the tests (14-day trial, 5 PCs per key, 30 days offline) match SALES.md lines 8, 15, 18, set by Rex; update-file rules match SALES.md "Update notice". No test found asserting an unsourced rule (spot check 2026-11-14, not a full audit). |
+| Q3 | Automated tests run with one command and all pass | PASS | `dotnet test tests/Orgodesk.Core.Tests -c Release` on d70b106, 2026-11-14: Failed 0, Passed 86. Gap: the FC-45 and FC-46 fixes have no automated test (Windows shell and installer). |
+| Q4 | Invalid, empty, oversized and odd input: clear message, no crash, no silent wrong result | PASS | VM 2026-11-14, build d70b106 (SHA-256 cf188dc3...5a74): 8 odd-named files (emoji, accents, 180 chars, quotes, no extension) all in the layout, no errors; damaged layout.json and settings.json start with a logged message; unit tests cover an empty, malformed and 20 KB version file. The 4 FAIL lines in `[edge-odd-names]` are the test script's own text encoding, checked by hand. Empty desktop not tried. |
+| Q5 | Each dependency failing (network, file, disk, service, model): says so, carries on or stops cleanly | FAIL | FC-45: VM 2026-11-14, build d70b106 (SHA-256 cf188dc3...5a74): after explorer.exe is killed and returns, a new desktop file is not noticed in 30 s (2 of 2 tries). Other dependencies: disk (failed save logged, `[edge-log-error]` PASS today); network for the version file (unit tests, offline and 404); network for the licence check not re-run on this build. |
+| Q6 | Closed or killed mid-work: next start is fine | PASS | VM 2026-11-14, build d70b106 (SHA-256 cf188dc3...5a74) `[edge-kill-mid-save]` 01:33: layout.json valid after 20 hard kills, starts normally. |
+| Q7 | Works at real size and over a long run | FAIL | FC-44: no full 8-hour soak has finished; the cut-off run rose about 2 MB an hour and 4 handles per desktop file creation. |
+| Q8 | Data survives save and reopen, missing folder, damaged file, upgrade | PASS | VM 2026-11-14, build d70b106 (SHA-256 cf188dc3...5a74): save and reopen (`[fix-placed-kept]`), missing data folder (`[fix-data-deleted]`), damaged layout restored from the last good copy and damaged settings reset (`[edge-corrupt-*]`). Upgrade: Rex's PC went da01808 to bba5714 on 2026-11-13 with all 15 Orgos kept (bba5714 differs from d70b106 only in Installer.cs). |
+| Q9 | Data backed up and a restore tried |  | Automatic restore from layout.json.bak passed today (Q8). Not run on this build: restoring a snapshot by hand. Never done: the independent data-loss attack in SPECIALIZED F. |
+| Q10 | Previous release obtainable; rollback tried |  | Not run. Older builds are kept in `restore\`, but installing one over a newer build has never been tried. |
+| Q11 | Open Critical 0, Major 0; Minor and Low listed as known issues | FAIL | Open: FC-44 (leak) and FC-45 (reopened today), both proposed Major; FC-47. Rex has not confirmed the proposed severities (P1). |
+| Q12 | No secret in code, repo history, build, logs or errors | PASS | 2026-11-14 on d70b106: grep over `git log -p --all` for keys, tokens and passwords: 0 hits; no commit ever set a non-empty ProductId; no personal path or email in tracked files. |
+| Q13 | Outside input treated as data; least access | PASS | Version file and layout are parsed as JSON data only; a non-https address is never called and a non-https link is refused (UpdateCheckerTests, pass today). Installs and runs as a standard user with no admin prompt (VM 2026-11-14, build d70b106 (SHA-256 cf188dc3...5a74)). |
+| Q14 | Security rules and the kind section passed; dependencies pinned and in support | FAIL | FC-47: no lock file, package versions not pinned by one. `dotnet list package --vulnerable --include-transitive` 2026-11-14: none. .NET 10 in support. Build is unsigned (Rex's written decision, P9). 2FA on the Gumroad, GitHub and Cloudflare accounts not confirmed. |
+| Q15 | A stranger installs and does the main job from the README alone |  | Not run. No stranger has installed it from README-buyers.txt, and no release zip exists yet. |
+| Q16 | Every error says what went wrong and what to do |  | Not reviewed on this build. Damaged-data and failed-save messages are logged today; the on-screen wording was last seen 2026-11-11/12. |
+| Q17 | Keyboard alone, visible focus, contrast 4.5:1, never colour alone |  | Not run. Keyboard use passed 2026-11-12 on an earlier build; focus visibility and 4.5:1 contrast have never been measured. |
+| Q18 | Start and main action not slow; idle use settles | FAIL | FC-44: memory does not settle when idle (107.0 to 114.5 MB over 3.5 idle hours in the cut-off soak). |
+| Q19 | Clean machine from the real installer, zip or URL; platforms named; removes cleanly |  | Partly. VM 2026-11-14, build d70b106 (SHA-256 cf188dc3...5a74), Windows 11 Home build 26300, standard user: `--install` of the dev exe works, 3 installs over a running copy pass (FC-46). Not run: the real release zip (none built), uninstall on this build. |
+| Q20 | Repo meets the repo standard | FAIL | FC-47: no lock file, no LICENSE file, no AGENTS.md, no release tag, CHANGELOG has no dated release. Present: README, CHANGELOG, ISSUES, one-command build and test, no personal paths. |
+| Q21 | Separable parts; content and numbers in data | PASS | Orgodesk.sln: Core (no Windows code, unit-tested), Windows (shell interop), App (UI). Sale settings in Sales.cs, user settings in settings.json, rules and layout in layout.json. |
+| Q22 | Log in a known place shows every failure; version shown | PASS | VM 2026-11-14, build d70b106 (SHA-256 cf188dc3...5a74): every failure caused today is in `%APPDATA%\orgodesk\error.log` (damaged layout 01:29:07, damaged settings 01:29:36, failed save 01:30:22). Version line in the tray menu last seen 2026-11-12, not re-seen today. FC-45 leaves no log line. |
+| Q23 | Support path; user can send the log; health check and heartbeats for a service |  | Not complete. support@crc-solutions.org forwards (Cloudflare log 2026-11-12); a mail from an outside account has not been seen arriving. No "open log folder" menu item; README-buyers.txt does not say where the log is. |
+| Q24 | Cannot harm machine, data or money; destructive actions shown first and cancellable |  | Not re-run on this build. 2026-11-12: Delete sends files to the Recycle Bin; uninstall asks before removing data. |
+| Q25 | Promises match what was tested; every licence allows the use |  | Not run. No store page exists yet. THIRD-PARTY-NOTICES.txt covers the .NET runtime (MIT). |
+| Q26 | All checked on the exact release build; Rex's go |  | No release build, no go from Rex. |
+
+**Requirements met: 9 of 26.** Failure tests run for Q5: 3 of 4 (disk, version-file network, Explorer; licence network not re-run). Last clean-machine run: 2026-11-14, VM, dev exe (not a release zip).
+
+2026-11-14 release check (first use of the release-check skill), on d70b106. Only results from this build count as PASS; a blank row means not run on this build, not failed. VM runs: `[fix-*]`, `[edge-*]`, `[fc45]`, `[fc46]` lines dated 01:25 to 01:33 in the VM's `C:\orgodesk-test\results.log`. The "Explorer restart" PASS in Specialized A above only checked that the Orgos came back; see FC-45.
