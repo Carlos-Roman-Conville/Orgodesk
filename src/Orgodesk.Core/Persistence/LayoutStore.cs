@@ -154,6 +154,16 @@ public sealed class LayoutStore
 
     private static void Normalize(Layout l)
     {
+        // A hand-edited file can hold "pages":null or [null]; treat those as empty instead of crashing the load.
+        l.Pages ??= new(); l.Pages.RemoveAll(p => p == null);
+        l.Rules ??= new(); l.Rules.RemoveAll(r => r == null);
+        l.Presets ??= new(); l.Presets.RemoveAll(p => p == null);
+        foreach (var p in l.Pages.Concat(l.Presets))
+        {
+            p.Fences ??= new(); p.Fences.RemoveAll(f => f == null);
+            p.FreeItems ??= new(StringComparer.OrdinalIgnoreCase);
+            foreach (var f in p.Fences) { f.Items ??= new(); f.Items.RemoveAll(k => k == null); }
+        }
         if (l.Pages.Count == 0) l.Pages.Add(new Page());
         if (l.ActivePageIndex < 0 || l.ActivePageIndex >= l.Pages.Count) l.ActivePageIndex = 0;
         for (int i = 0; i < l.Pages.Count; i++)

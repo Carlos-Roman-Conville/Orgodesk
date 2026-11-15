@@ -46,7 +46,7 @@ public static class Installer
         catch (Exception ex)
         {
             Log.Error("Install failed", ex);
-            MessageBox.Show("Install failed: " + ex.Message, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show($"Orgodesk could not be installed: {ex.Message}\n\nClose Orgodesk if it is running, then run the installer again. If it keeps failing, email {Sales.SupportEmail} and attach the error log ({Log.Path}).", "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
     }
@@ -66,6 +66,8 @@ public static class Installer
             bool deleteData = !quiet && MessageBox.Show(
                 $"Also delete your Orgos, presets and settings?\n\nYes: delete {LayoutStore.DefaultRoot}\nNo: keep them, so reinstalling Orgodesk brings everything back.",
                 "Uninstall Orgodesk", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+            // HKCU\Software\Orgodesk (trial start, activation hash) is kept on purpose, even with "delete data": a
+            // reinstall must neither start a new trial nor use up another activation.
             if (deleteData)
             {
                 try { Directory.Delete(LayoutStore.DefaultRoot, recursive: true); } catch (Exception ex) { Log.Error("Could not delete data folder", ex); }
@@ -89,7 +91,7 @@ public static class Installer
         catch (Exception ex)
         {
             Log.Error("Uninstall failed", ex);
-            if (!quiet) MessageBox.Show("Uninstall failed: " + ex.Message, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!quiet) MessageBox.Show($"Orgodesk could not be uninstalled: {ex.Message}\n\nExit Orgodesk from its tray icon, then try again in Settings > Apps. If it keeps failing, email {Sales.SupportEmail} and attach the error log ({Log.Path}).", "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
     }

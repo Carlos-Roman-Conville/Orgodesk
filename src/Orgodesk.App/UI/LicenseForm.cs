@@ -12,12 +12,12 @@ public sealed class LicenseForm : Form
     private readonly SalesConfig _cfg;
     private readonly Label _status = new() { AutoSize = false, Dock = DockStyle.Top, Height = 54, Padding = new Padding(4) };
     private readonly TextBox _key = new() { Width = 330 };
-    private readonly Button _activate = new() { Text = "Activate", Width = 100 };
+    private readonly Button _activate = new() { Text = "&Activate", Width = 100 };
     private readonly Label _result = new() { AutoSize = false, Width = 440, Height = 40 };
 
     // In a high-contrast theme fixed reds and greens can be unreadable; use the theme's own text color there.
     private static Color Bad => SystemInformation.HighContrast ? SystemColors.ControlText : Color.Firebrick;
-    private static Color Good => SystemInformation.HighContrast ? SystemColors.ControlText : Color.ForestGreen;
+    private static Color Good => SystemInformation.HighContrast ? SystemColors.ControlText : Color.FromArgb(0, 100, 0);
 
     public LicenseStatus Status { get; private set; }
 
@@ -39,7 +39,7 @@ public sealed class LicenseForm : Form
         ClientSize = new Size(470, 230);
 
         var body = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, Padding = new Padding(10), WrapContents = false };
-        body.Controls.Add(new Label { Text = "License key (from your Gumroad receipt):", AutoSize = true });
+        body.Controls.Add(new Label { Text = "&License key (from your Gumroad receipt):", AutoSize = true });
         var row = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = false };
         row.Controls.Add(_key);
         row.Controls.Add(_activate);
@@ -48,10 +48,12 @@ public sealed class LicenseForm : Form
 
         var buttons = new FlowLayoutPanel { Dock = DockStyle.Bottom, FlowDirection = FlowDirection.RightToLeft, Height = 44, Padding = new Padding(8) };
         var close = new Button { Text = "Close", Width = 100, DialogResult = DialogResult.Cancel };
-        var buy = new Button { Text = "Buy Orgodesk", Width = 130, Enabled = !string.IsNullOrWhiteSpace(cfg.BuyUrl) };
+        var buy = new Button { Text = "&Buy Orgodesk", Width = 130, Enabled = !string.IsNullOrWhiteSpace(cfg.BuyUrl) };
         buy.Click += (_, _) => Windows.Shell.ShellActions.OpenPath(cfg.BuyUrl, Handle);
         buttons.Controls.Add(close);
         buttons.Controls.Add(buy);
+        buy.TabIndex = 0; close.TabIndex = 1;   // tab in the order they appear (the panel lays out right to left)
+        _key.AccessibleName = "License key";
         CancelButton = close;
         AcceptButton = _activate;
 
@@ -95,6 +97,7 @@ public sealed class LicenseForm : Form
         _result.Text = res.Message;
         _result.ForeColor = res.Outcome == VerifyOutcome.Valid ? Good : Bad;
         _activate.Enabled = true;
+        (res.Outcome == VerifyOutcome.Valid ? (Control)_activate : _key).Focus();   // keep keyboard focus in the dialog
         Log.Info($"License activation: {res.Outcome}");
         ShowStatus();
     }

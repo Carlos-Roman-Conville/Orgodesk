@@ -68,14 +68,16 @@ public sealed class SettingsForm : Form
         tabs.TabPages.Add(BuildRulesTab());
 
         var buttons = new FlowLayoutPanel { Dock = DockStyle.Bottom, FlowDirection = FlowDirection.RightToLeft, Height = 44, Padding = new Padding(8) };
-        var cancel = new Button { Text = "Close", Width = 90 };
-        var apply = new Button { Text = "Apply", Width = 90 };
+        var cancel = new Button { Text = "&Close", Width = 90 };
+        var apply = new Button { Text = "A&pply", Width = 90 };
         var ok = new Button { Text = "OK", Width = 90 };
         cancel.Click += (_, _) => Close();
         apply.Click += (_, _) => Apply();
         ok.Click += (_, _) => { Apply(); Close(); };
         buttons.Controls.AddRange(new Control[] { cancel, apply, ok });
         AcceptButton = ok;
+        CancelButton = cancel;
+        ok.TabIndex = 0; apply.TabIndex = 1; cancel.TabIndex = 2;   // tab in the order they appear (the panel lays out right to left)
 
         Controls.Add(tabs);
         Controls.Add(buttons);
@@ -171,13 +173,13 @@ public sealed class SettingsForm : Form
 
         var side = new FlowLayoutPanel { Dock = DockStyle.Right, FlowDirection = FlowDirection.TopDown, Width = 120, Padding = new Padding(6) };
         Button B(string text, EventHandler h) { var b = new Button { Text = text, Width = 100 }; b.Click += h; return b; }
-        side.Controls.Add(B("Add...", (_, _) => AddRule()));
-        side.Controls.Add(B("Edit...", (_, _) => EditRule()));
-        side.Controls.Add(B("Remove", (_, _) => RemoveRule()));
-        side.Controls.Add(B("Move up", (_, _) => MoveRule(-1)));
-        side.Controls.Add(B("Move down", (_, _) => MoveRule(1)));
+        side.Controls.Add(B("&Add...", (_, _) => AddRule()));
+        side.Controls.Add(B("&Edit...", (_, _) => EditRule()));
+        side.Controls.Add(B("&Remove", (_, _) => RemoveRule()));
+        side.Controls.Add(B("Move &up", (_, _) => MoveRule(-1)));
+        side.Controls.Add(B("Move &down", (_, _) => MoveRule(1)));
         side.Controls.Add(new Label { Height = 12 });
-        side.Controls.Add(B("Apply rules now", (_, _) => { SaveRules(); _surface.ApplyRulesNow(); }));
+        side.Controls.Add(B("Apply rules &now", (_, _) => { SaveRules(); _surface.ApplyRulesNow(); }));
         var hint = new Label
         {
             Dock = DockStyle.Bottom, AutoSize = false, Height = 40, Padding = new Padding(6),

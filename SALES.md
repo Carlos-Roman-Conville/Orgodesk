@@ -20,8 +20,9 @@ Written 2026-11-11 for the 10-day push (see the 10-Day Money Guide).
 - **Setting the clock back** doesn't extend the trial (the app remembers the latest time it has seen).
 - **Development build:** while `ProductId` in `src/Orgodesk.App/Sales.cs` is empty, there's no trial and no
   key, and everything is on. That's your own copy (`install.bat`). `release.bat` refuses to build until the id is set.
-- Stored in `%APPDATA%\orgodesk\license.json`. Deleting it restarts the trial. That's acceptable for a $5 app,
-  and stronger protection isn't worth the time this week.
+- Stored in `%APPDATA%\orgodesk\license.json`. Since 2026-11-15 the trial start is also kept as `TrialStart` in
+  `HKCU\Software\Orgodesk` (paid builds only; the earlier date wins), so deleting the file no longer restarts the
+  trial. Uninstall keeps that value. To test a fresh trial on one Windows account, delete `TrialStart` as well.
 - Code: `src/Orgodesk.Core/Licensing/` (rules, store, Gumroad check), `src/Orgodesk.App/UI/LicenseForm.cs`,
   the gate in `Program.cs`, the tray entries in `TrayContext.cs`. Tests: `tests/Orgodesk.Core.Tests/LicensingTests.cs`.
 

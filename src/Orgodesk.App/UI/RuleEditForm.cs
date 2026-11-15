@@ -13,7 +13,7 @@ public sealed class RuleEditForm : Form
     private readonly TextBox _pattern = new() { Width = 300 };
     private readonly ComboBox _type = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 160 };
     private readonly ComboBox _target = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 300 };
-    private readonly CheckBox _enabled = new() { Text = "Enabled", AutoSize = true };
+    private readonly CheckBox _enabled = new() { Text = "&Enabled", AutoSize = true };
     private readonly Label _help = new() { AutoSize = true, MaximumSize = new Size(320, 0), ForeColor = SystemColors.GrayText };
     private readonly Rule _original;
 
@@ -50,11 +50,11 @@ public sealed class RuleEditForm : Form
             foreach (var f in page.Fences.Where(f => !f.IsPortal))
                 _target.Items.Add(new FenceChoice(f.Id, layout.Pages.Count > 1 ? $"{f.Title}  ({page.Name})" : f.Title));
 
-        Row("Name", _name);
-        Row("Match by", _kind);
-        Row("Pattern", _pattern);
-        Row("Item type", _type);
-        Row("Move into Orgo", _target);
+        Row("&Name", _name);
+        Row("&Match by", _kind);
+        Row("&Pattern", _pattern);
+        Row("Item &type", _type);
+        Row("Move &into Orgo", _target);
         Row("", _enabled);
         Row("", _help);
 
@@ -63,6 +63,7 @@ public sealed class RuleEditForm : Form
         var ok = new Button { Text = "OK", Width = 90 };
         ok.Click += (_, _) => Accept();
         buttons.Controls.AddRange(new Control[] { cancel, ok });
+        ok.TabIndex = 0; cancel.TabIndex = 1;   // tab in the order they appear (the panel lays out right to left)
         AcceptButton = ok;
         CancelButton = cancel;
         Controls.Add(t);
@@ -96,19 +97,21 @@ public sealed class RuleEditForm : Form
     {
         if (_target.SelectedItem is not FenceChoice fc)
         {
-            MessageBox.Show(this, "Create an Orgo first, then point the rule at it.", "Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "There is no Orgo for this rule to move items into. Press Cancel, draw an Orgo on the desktop (right-drag on empty space), then add the rule again.", "Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
         var kind = _kind.SelectedItem is RuleKind k ? k : RuleKind.Extension;
         if (kind != RuleKind.ItemType && string.IsNullOrWhiteSpace(_pattern.Text))
         {
-            MessageBox.Show(this, "Enter a pattern.", "Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "The pattern is empty. Type what to match (for example jpg;png for Extension, or Report* for Name pattern), then press OK.", "Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _pattern.Focus();
             return;
         }
         var type = _type.SelectedItem is ItemType it ? it : ItemType.Any;
         if (kind == RuleKind.ItemType && type == ItemType.Any)
         {
-            MessageBox.Show(this, "Choose an item type other than Any.", "Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, "Item type is set to Any, which would match everything. Pick File, Folder, Shortcut or System in the Item type list, then press OK.", "Rule", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _type.Focus();
             return;
         }
         Result = new Rule

@@ -13,13 +13,27 @@ Work toward the first public release, 1.0.0. The version number in `Orgodesk.App
 - `THIRD-PARTY-NOTICES.txt` for the bundled .NET runtime and Windows Forms.
 - New-version notice: once a day Orgodesk reads a small version file and shows a tray notice with a link when a newer version is out. It never downloads or installs anything. Tick box in Settings; "Check for a new version now" in the tray menu.
 
+- "Open log folder (for support)" in the tray menu; README-buyers.txt says where the log is and how to send it.
+- The licence is also checked once a day and two minutes after the PC wakes; Orgodesk closes mid-session only when Gumroad answers that the key was refunded or the trial is over, never because the network is down.
+- The trial start is also kept in the registry (paid builds), so deleting license.json no longer restarts the trial.
+
 ### Changed
+- The seller and publisher name is CRC Solutions; support address support@crc-solutions.org.
+- Error messages say what to do next; dialogs tab in on-screen order, have keyboard shortcuts, and close with Esc.
+- An update link is only opened when it is on the Orgodesk download site.
+- Rename refuses names containing \ or /; a portal's "Open folder" opens only an existing folder.
 - Built on .NET 10 (was .NET 8, whose support ended 2026-11-10). The download is smaller (about 107 MB, was 145 MB).
 - The tray menu shows the version.
 - Windows 11 only; Windows 10 is not supported.
 - Uninstall from Settings > Apps removes the program; it asks whether to keep your Orgos.
 
 ### Fixed
+- Each desktop refresh leaked two handles (four per new desktop file) until garbage collection (FC-44).
+- A layout.json with `null` lists, or a licence-server reply that was not a JSON object, crashed Orgodesk.
+- A rate-limit or other non-404 answer from Gumroad revoked a paying buyer's key.
+- Licence success text and colour swatch labels were below 4.5:1 contrast.
+- After Explorer restarted, Orgodesk could stop seeing desktop changes; it now registers for them again, including when the watchdog re-attaches (FC-45).
+- Installing over a running copy could fail with a sharing violation and leave nothing running; the installer now waits up to 15 seconds for the old copy to release its file (FC-46).
 - A refused activation at the limit still used up an activation, and so did every retry (FC-41).
 - After a crash, the desktop could be left with no icons behind the license window (FC-42).
 - License messages were hard to read in a high-contrast theme.

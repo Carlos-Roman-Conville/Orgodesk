@@ -9,13 +9,13 @@ namespace Orgodesk.App.UI;
 public sealed class FencePropertiesForm : Form
 {
     private readonly TextBox _title = new() { Width = 320 };
-    private readonly CheckBox _customColor = new() { Text = "Use custom colors for this Orgo", AutoSize = true };
+    private readonly CheckBox _customColor = new() { Text = "&Use custom colors for this Orgo", AutoSize = true };
     private readonly ColorPicker _color = new();
     private readonly ColorPicker _titleColor = new();
     private readonly TextBox _portal = new() { Width = 240 };
     private readonly ComboBox _sort = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 140 };
-    private readonly CheckBox _rolled = new() { Text = "Rolled up", AutoSize = true };
-    private readonly CheckBox _autoRoll = new() { Text = "Roll up automatically (opens while the mouse is over it)", AutoSize = true };
+    private readonly CheckBox _rolled = new() { Text = "&Rolled up", AutoSize = true };
+    private readonly CheckBox _autoRoll = new() { Text = "Roll up &automatically (opens while the mouse is over it)", AutoSize = true };
     private readonly string? _originalPortal;
 
     public FencePropertiesForm(Fence fence, AppSettings settings)
@@ -45,8 +45,8 @@ public sealed class FencePropertiesForm : Form
         }
 
         var portalRow = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
-        var browse = new Button { Text = "Browse...", Width = 80 };
-        var clear = new Button { Text = "Clear", Width = 60 };
+        var browse = new Button { Text = "Bro&wse...", Width = 80 };
+        var clear = new Button { Text = "C&lear", Width = 60 };
         browse.Click += (_, _) =>
         {
             using var dlg = new FolderBrowserDialog { Description = "Folder this Orgo shows", UseDescriptionForTitle = true, SelectedPath = _portal.Text };
@@ -57,12 +57,12 @@ public sealed class FencePropertiesForm : Form
 
         foreach (SortMode m in Enum.GetValues<SortMode>()) _sort.Items.Add(m);
 
-        Row("Title", _title);
+        Row("&Title", _title);
         Row("", _customColor);
-        Row("Orgo color", _color);
-        Row("Title bar color", _titleColor);
-        Row("Portal folder", portalRow);
-        Row("Sort items by", _sort);
+        Row("&Orgo color", _color);
+        Row("Title &bar color", _titleColor);
+        Row("&Portal folder", portalRow);
+        Row("&Sort items by", _sort);
         Row("", _rolled);
         Row("", _autoRoll);
         var note = new Label
@@ -76,6 +76,18 @@ public sealed class FencePropertiesForm : Form
         var cancel = new Button { Text = "Cancel", Width = 90, DialogResult = DialogResult.Cancel };
         var ok = new Button { Text = "OK", Width = 90, DialogResult = DialogResult.OK };
         buttons.Controls.AddRange(new Control[] { cancel, ok });
+        ok.TabIndex = 0; cancel.TabIndex = 1;   // tab in the order they appear (the panel lays out right to left)
+        FormClosing += (_, e) =>
+        {
+            // Apply() would silently drop a folder that does not exist; say so and keep the dialog open instead.
+            var p = _portal.Text.Trim();
+            if (DialogResult != DialogResult.OK || p.Length == 0 || Directory.Exists(p)
+                || string.Equals(p, _originalPortal, StringComparison.OrdinalIgnoreCase)) return;   // unplugged drive: keep it
+            e.Cancel = true;
+            DialogResult = DialogResult.None;
+            MessageBox.Show(this, $"The portal folder \"{p}\" does not exist, so nothing was saved. Check the path, press Browse... to pick a folder, or press Clear to make this a normal Orgo.", "Orgo properties", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            _portal.Focus();
+        };
         AcceptButton = ok;
         CancelButton = cancel;
         Controls.Add(t);
@@ -100,7 +112,7 @@ public sealed class FencePropertiesForm : Form
         fence.Color = _customColor.Checked ? _color.Value : null;
         fence.TitleColor = _customColor.Checked ? _titleColor.Value : null;
         var portal = string.IsNullOrWhiteSpace(_portal.Text) ? null : _portal.Text.Trim();
-        if (portal != null && !Directory.Exists(portal)) portal = null;
+        if (portal != null && !Directory.Exists(portal) && !string.Equals(portal, _originalPortal, StringComparison.OrdinalIgnoreCase)) portal = null;
         bool changed = !string.Equals(portal, _originalPortal, StringComparison.OrdinalIgnoreCase);
         fence.PortalPath = portal;
         if (changed && portal != null) fence.Items.Clear();

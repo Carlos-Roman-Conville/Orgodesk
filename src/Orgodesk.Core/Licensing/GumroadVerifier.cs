@@ -74,10 +74,17 @@ public sealed class GumroadVerifier
                 ? new VerifyResult(VerifyOutcome.NetworkError, "The license server had a problem. Try again in a few minutes.")
                 : new VerifyResult(VerifyOutcome.NetworkError, "Unexpected answer from the license server.");
         }
+        // A proxy or captive portal can answer with JSON that is not an object ([], null, 5).
+        if (root.ValueKind != JsonValueKind.Object)
+            return new VerifyResult(VerifyOutcome.NetworkError, "Unexpected answer from the license server.");
         bool success = root.TryGetProperty("success", out var s) && s.ValueKind == JsonValueKind.True;
         if (!success)
         {
             if ((int)status >= 500) return new VerifyResult(VerifyOutcome.NetworkError, "The license server had a problem. Try again in a few minutes.");
+            // Gumroad answers an unknown key with 404. Any other refusal (429, 401, 400) is not proof the key is bad,
+            // so it must not revoke a paying buyer; the offline grace covers it.
+            if (status != HttpStatusCode.NotFound && status != HttpStatusCode.OK)
+                return new VerifyResult(VerifyOutcome.NetworkError, "The license server refused the check. Try again later.");
             return new VerifyResult(VerifyOutcome.Invalid, "That license key was not found. Check it against your Gumroad receipt.");
         }
         if (root.TryGetProperty("purchase", out var p))

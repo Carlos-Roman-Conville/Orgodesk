@@ -1,4 +1,7 @@
+using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.Win32;
 using Orgodesk.App.UI;
 using Orgodesk.Core.Licensing;
 using Orgodesk.Core.Persistence;
@@ -12,6 +15,8 @@ internal static class Program
     public const string ExitEventName = @"Local\Orgodesk.Exit";
     /// <summary>Exit event of the program's earlier name, so an old copy can be stopped on install.</summary>
     public const string LegacyExitEventName = @"Local\FencesClone.Exit";
+
+
 
     [STAThread]
     private static int Main(string[] args)
@@ -69,7 +74,7 @@ internal static class Program
         if (!first)
         {
             Log.Info("Second copy started while one is running; closing it");
-            MessageBox.Show("Orgodesk is already running. Use its tray icon.", "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Orgodesk is already running, so this second copy has closed. Look for its icon at the bottom right of the taskbar (it may be under the ^ arrow) and right-click it for Settings.", "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return 0;
         }
 
@@ -86,7 +91,7 @@ internal static class Program
         var store = new LayoutStore(LayoutStore.DefaultRoot);
 
         // Trial and license gate. Runs before the real desktop icons are hidden, so leaving here is always safe.
-        var licenseStore = new LicenseStore(LayoutStore.DefaultRoot);
+        var licenseStore = new LicenseStore(LayoutStore.DefaultRoot, Sales.Config.IsDevBuild ? null : new RegistryTrialMarker());
         var license = licenseStore.LoadOrStart(DateTime.UtcNow);
         var status = LicenseRules.Evaluate(license, Sales.Config, DateTime.UtcNow);
         Log.Info($"License state: {status.State} ({status.Message})");
@@ -105,5 +110,33 @@ internal static class Program
         Application.Run(context);
         Log.Info("Exited");
         return 0;
+    }
+}
+
+/// <summary>
+/// Keeps the trial start in HKCU\Software\Orgodesk next to the activation hash (M3), so deleting license.json does not
+/// start a new trial. Uninstall keeps this key, even when it deletes the data folder.
+/// </summary>
+internal sealed class RegistryTrialMarker : ITrialMarker
+{
+    private const string KeyPath = @"Software\Orgodesk";
+    private const string ValueName = "TrialStart";
+
+    public DateTime? Read()
+    {
+        using var k = Registry.CurrentUser.OpenSubKey(KeyPath);
+        return k?.GetValue(ValueName) is string s
+            && DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var t)
+            ? t.ToUniversalTime() : null;
+    }
+
+    public void Write(DateTime firstRunUtc)
+    {
+        try
+        {
+            using var k = Registry.CurrentUser.CreateSubKey(KeyPath);
+            k?.SetValue(ValueName, DateTime.SpecifyKind(firstRunUtc, DateTimeKind.Utc).ToString("o", CultureInfo.InvariantCulture));
+        }
+        catch (Exception ex) { Log.Error("Could not remember the trial start", ex); }
     }
 }

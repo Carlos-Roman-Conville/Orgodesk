@@ -82,6 +82,8 @@ public static class ShellActions
     {
         newDisplayName = newDisplayName.Trim();
         if (newDisplayName.Length == 0 || newDisplayName == item.DisplayName) return false;
+        // A typed "..\x" or "a/b" would move the item out of its folder; a rename stays a rename.
+        if (newDisplayName.IndexOfAny(new[] { '\\', '/' }) >= 0) return false;
         if (item.Path != null)
         {
             var fileName = Path.GetFileName(item.Path);

@@ -43,10 +43,11 @@ public static class LicenseRules
         var now = EffectiveNow(r, nowUtc);
 
         if (!r.Revoked && !string.IsNullOrWhiteSpace(r.Key) && r.LastVerifiedUtc is DateTime v
-            && (now - v).TotalDays <= cfg.OfflineGraceDays)
+            && (v - nowUtc).TotalDays <= cfg.OfflineGraceDays && (now - v).TotalDays <= cfg.OfflineGraceDays)
             return new LicenseStatus(LicenseState.Licensed, 0, "Licensed");
 
-        var used = (now - r.FirstRunUtc).TotalDays;
+        // A trial start later than the real clock is an edited file: count the trial as used up.
+        var used = InFuture(r.FirstRunUtc, nowUtc) ? cfg.TrialDays : (now - r.FirstRunUtc).TotalDays;
         int left = (int)Math.Ceiling(cfg.TrialDays - used);
         if (left > 0)
             return new LicenseStatus(LicenseState.Trial, left, left == 1 ? "Trial: 1 day left" : $"Trial: {left} days left");
@@ -60,7 +61,20 @@ public static class LicenseRules
     /// <summary>True when a stored key should be confirmed with Gumroad again.</summary>
     public static bool RecheckDue(LicenseRecord r, SalesConfig cfg, DateTime nowUtc) =>
         !cfg.IsDevBuild && !string.IsNullOrWhiteSpace(r.Key) && !r.Revoked
-        && (r.LastVerifiedUtc is not DateTime v || (EffectiveNow(r, nowUtc) - v).TotalDays >= cfg.RecheckDays);
+        && (r.LastVerifiedUtc is not DateTime v || InFuture(v, nowUtc) || (EffectiveNow(r, nowUtc) - v).TotalDays >= cfg.RecheckDays);
+
+    // Compared with the real clock, not EffectiveNow: an edited LastSeenUtc must not make a future date look valid.
+    private static bool InFuture(DateTime t, DateTime nowUtc) => t > nowUtc.AddDays(1);
+}
+
+/// <summary>
+/// A copy of the trial start kept outside the data folder (the App keeps it in HKCU\Software\Orgodesk), so Core stays
+/// free of Windows code. Read returns null when nothing is stored.
+/// </summary>
+public interface ITrialMarker
+{
+    DateTime? Read();
+    void Write(DateTime firstRunUtc);
 }
 
 /// <summary>Reads and writes license.json in the app's data folder.</summary>
@@ -69,20 +83,37 @@ public sealed class LicenseStore
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
     public string Path { get; }
 
-    public LicenseStore(string rootDir) => Path = System.IO.Path.Combine(rootDir, "license.json");
+    private readonly ITrialMarker? _marker;
 
-    /// <summary>Loads the record, creating it (trial starts now) on the first run. Also moves LastSeen forward.</summary>
+    public LicenseStore(string rootDir, ITrialMarker? marker = null)
+    {
+        Path = System.IO.Path.Combine(rootDir, "license.json");
+        _marker = marker;
+    }
+
+    /// <summary>
+    /// Loads the record, creating it on the first run. The trial start is the earlier of the file and the marker, so
+    /// deleting or editing license.json does not start a new trial (M3). Also moves LastSeen forward.
+    /// </summary>
     public LicenseRecord LoadOrStart(DateTime nowUtc)
     {
         LicenseRecord? r = null;
         try { if (File.Exists(Path)) r = JsonSerializer.Deserialize<LicenseRecord>(File.ReadAllText(Path), Json); }
         catch (Exception ex) when (ex is JsonException || ex is IOException) { r = null; }
+        DateTime? marked = null;
+        try { marked = _marker?.Read(); } catch { }   // a marker that can't be read must never stop the app
+        if (marked == default(DateTime)) marked = null;
+        DateTime? inFile = r != null && r.FirstRunUtc != default ? r.FirstRunUtc : null;
+        var start = inFile is DateTime f && (marked is not DateTime m0 || f <= m0) ? f : marked ?? nowUtc;
+        if (start > nowUtc.AddDays(1)) start = nowUtc;   // first run under a fast clock: don't count the trial as used up
+
         if (r == null || r.FirstRunUtc == default)
-        {
-            // A missing or unreadable file starts a new trial.
-            r = new LicenseRecord { FirstRunUtc = nowUtc, LastSeenUtc = nowUtc };
-        }
+            r = new LicenseRecord { FirstRunUtc = start, LastSeenUtc = nowUtc };   // missing or unreadable file
+        else
+            r.FirstRunUtc = start;
         if (nowUtc > r.LastSeenUtc) r.LastSeenUtc = nowUtc;
+        if (_marker != null && marked != start)
+            try { _marker.Write(start); } catch { }
         Save(r);
         return r;
     }

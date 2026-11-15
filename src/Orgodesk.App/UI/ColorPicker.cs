@@ -6,7 +6,7 @@ namespace Orgodesk.App.UI;
 /// <summary>A color swatch button plus an alpha spinner, editing one "#AARRGGBB" value.</summary>
 public sealed class ColorPicker : FlowLayoutPanel
 {
-    private readonly Button _swatch = new() { Width = 60, Height = 24, Text = "", FlatStyle = FlatStyle.Flat };
+    private readonly Button _swatch = new() { Width = 84, Height = 24, Text = "", FlatStyle = FlatStyle.Flat };
     private readonly NumericUpDown _alpha = new() { Minimum = 0, Maximum = 255, Width = 56 };
     private Color _rgb = Color.Gray;
 
@@ -27,6 +27,8 @@ public sealed class ColorPicker : FlowLayoutPanel
             ValueChanged?.Invoke(this, EventArgs.Empty);
         };
         _alpha.ValueChanged += (_, _) => { Refresh(); ValueChanged?.Invoke(this, EventArgs.Empty); };
+        _swatch.AccessibleName = "Color (press Enter to change)";
+        _alpha.AccessibleName = "Transparency, 0 to 255";
         Controls.Add(_swatch);
         Controls.Add(new Label { Text = "alpha", AutoSize = true, Padding = new Padding(6, 5, 2, 0) });
         Controls.Add(_alpha);
@@ -45,10 +47,17 @@ public sealed class ColorPicker : FlowLayoutPanel
         }
     }
 
+    private static double Lum(Color c)
+    {
+        static double F(int v) { var s = v / 255.0; return s <= 0.03928 ? s / 12.92 : Math.Pow((s + 0.055) / 1.055, 2.4); }
+        return 0.2126 * F(c.R) + 0.7152 * F(c.G) + 0.0722 * F(c.B);
+    }
+
     public override void Refresh()
     {
         _swatch.BackColor = _rgb;
-        _swatch.ForeColor = _rgb.GetBrightness() > 0.5f ? Color.Black : Color.White;
+        _swatch.Text = $"#{_rgb.R:X2}{_rgb.G:X2}{_rgb.B:X2}";   // the value in words, so the swatch is not colour alone
+        _swatch.ForeColor = Lum(_rgb) > 0.179 ? Color.Black : Color.White;   // 0.179 = where black and white give equal WCAG contrast
         base.Refresh();
     }
 }

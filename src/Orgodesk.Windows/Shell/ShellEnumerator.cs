@@ -116,39 +116,47 @@ public static class ShellEnumerator
         int hr = folder.EnumObjects(IntPtr.Zero, Const.SHCONTF_FOLDERS | Const.SHCONTF_NONFOLDERS | extraFlags, out var e);
         if (hr != Const.S_OK || e == null) return result;
         var one = new IntPtr[1];
-        while (e.Next(1, out var child, out var fetched) == Const.S_OK && fetched == 1)
+        try
         {
-            IntPtr absolute = folderPidl == IntPtr.Zero ? Shell32.ILClone(child) : Shell32.ILCombine(folderPidl, child);
-            try
+            while (e.Next(1, out var child, out var fetched) == Const.S_OK && fetched == 1)
             {
-                one[0] = child;
-                uint attrs = Const.SFGAO_FOLDER | Const.SFGAO_LINK | Const.SFGAO_FILESYSTEM | Const.SFGAO_STREAM
-                           | Const.SFGAO_CANRENAME | Const.SFGAO_CANDELETE;
-                try { folder.GetAttributesOf(1, one, ref attrs); } catch { attrs = 0; }
-
-                var key = Shell32.GetNameFromIDList(absolute, Const.SIGDN_DESKTOPABSOLUTEPARSING);
-                var name = Shell32.GetNameFromIDList(absolute, Const.SIGDN_NORMALDISPLAY) ?? key ?? "?";
-                if (key == null) { Shell32.ILFree(child); Shell32.ILFree(absolute); continue; }
-                string? path = (attrs & Const.SFGAO_FILESYSTEM) != 0 ? Shell32.GetNameFromIDList(absolute, Const.SIGDN_FILESYSPATH) : null;
-                DateTime? modified = null;
-                if (path != null)
+                IntPtr absolute = folderPidl == IntPtr.Zero ? Shell32.ILClone(child) : Shell32.ILCombine(folderPidl, child);
+                try
                 {
-                    try
+                    one[0] = child;
+                    uint attrs = Const.SFGAO_FOLDER | Const.SFGAO_LINK | Const.SFGAO_FILESYSTEM | Const.SFGAO_STREAM
+                               | Const.SFGAO_CANRENAME | Const.SFGAO_CANDELETE;
+                    try { folder.GetAttributesOf(1, one, ref attrs); } catch { attrs = 0; }
+
+                    var key = Shell32.GetNameFromIDList(absolute, Const.SIGDN_DESKTOPABSOLUTEPARSING);
+                    var name = Shell32.GetNameFromIDList(absolute, Const.SIGDN_NORMALDISPLAY) ?? key ?? "?";
+                    if (key == null) continue;   // finally frees both PIDLs
+                    string? path = (attrs & Const.SFGAO_FILESYSTEM) != 0 ? Shell32.GetNameFromIDList(absolute, Const.SIGDN_FILESYSPATH) : null;
+                    DateTime? modified = null;
+                    if (path != null)
                     {
-                        modified = (attrs & Const.SFGAO_FOLDER) != 0 && (attrs & Const.SFGAO_STREAM) == 0
-                            ? Directory.GetLastWriteTime(path)
-                            : File.GetLastWriteTime(path);
+                        try
+                        {
+                            modified = (attrs & Const.SFGAO_FOLDER) != 0 && (attrs & Const.SFGAO_STREAM) == 0
+                                ? Directory.GetLastWriteTime(path)
+                                : File.GetLastWriteTime(path);
+                        }
+                        catch { }
                     }
-                    catch { }
+                    result.Add(new ShellItemInfo(folder, child, absolute, key, name, path, attrs, modified));
+                    child = IntPtr.Zero; absolute = IntPtr.Zero;
                 }
-                result.Add(new ShellItemInfo(folder, child, absolute, key, name, path, attrs, modified));
-                child = IntPtr.Zero; absolute = IntPtr.Zero;
+                finally
+                {
+                    if (child != IntPtr.Zero) Shell32.ILFree(child);
+                    if (absolute != IntPtr.Zero) Shell32.ILFree(absolute);
+                }
             }
-            finally
-            {
-                if (child != IntPtr.Zero) Shell32.ILFree(child);
-                if (absolute != IntPtr.Zero) Shell32.ILFree(absolute);
-            }
+        }
+        finally
+        {
+            // FC-44: the enumerator holds the desktop folders' find handles until released; waiting for the GC leaked 2 per refresh.
+            Marshal.ReleaseComObject(e);
         }
         return result;
     }

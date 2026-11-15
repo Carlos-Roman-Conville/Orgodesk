@@ -1387,7 +1387,8 @@ public sealed class DesktopSurface : Control
         };
         menu.Items.Add(auto);
         if (fence.IsPortal)
-            menu.Items.Add("Open folder", null, (_, _) => ShellActions.OpenPath(fence.PortalPath!, Handle));
+            // Security audit L3: only ever open a real folder, never a file or URL edited into layout.json.
+            menu.Items.Add("Open folder", null, (_, _) => { if (Directory.Exists(fence.PortalPath)) ShellActions.OpenPath(fence.PortalPath!, Handle); });
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(fence.IsPortal ? "Remove portal" : "Remove Orgo (icons go back to the desktop)", null, (_, _) => DeleteFence(fence));
         menu.Items.Add(new ToolStripSeparator());

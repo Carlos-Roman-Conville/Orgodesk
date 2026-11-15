@@ -33,11 +33,14 @@ public sealed class SnapshotsForm : Form
 
         var side = new FlowLayoutPanel { Dock = DockStyle.Right, FlowDirection = FlowDirection.TopDown, Width = 130, Padding = new Padding(6) };
         Button B(string text, EventHandler h) { var b = new Button { Text = text, Width = 112 }; b.Click += h; return b; }
-        side.Controls.Add(B("Save current...", (_, _) => SaveCurrent()));
-        side.Controls.Add(B("Restore", (_, _) => Restore()));
-        side.Controls.Add(B("Delete", (_, _) => Delete()));
+        var close = B("Close", (_, _) => Close());
+        CancelButton = close;
+        _list.AccessibleName = "Saved layout snapshots";
+        side.Controls.Add(B("&Save current...", (_, _) => SaveCurrent()));
+        side.Controls.Add(B("&Restore", (_, _) => Restore()));
+        side.Controls.Add(B("&Delete", (_, _) => Delete()));
         side.Controls.Add(new Label { Height = 12 });
-        side.Controls.Add(B("Close", (_, _) => Close()));
+        side.Controls.Add(close);
 
         Controls.Add(_list);
         Controls.Add(side);
@@ -74,7 +77,7 @@ public sealed class SnapshotsForm : Form
         var layout = _store.LoadSnapshot(s.Name);
         if (layout == null)
         {
-            MessageBox.Show(this, "That snapshot could not be read.", "Restore snapshot", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, "That snapshot file is damaged or missing, so your layout was not changed. Choose another snapshot, or select this one and press Delete.", "Restore snapshot", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
         _surface.ReplaceLayout(layout);

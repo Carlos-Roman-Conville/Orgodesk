@@ -14,6 +14,10 @@ Settings:   tray icon > Settings (start with Windows, colors, icon size, rules).
 Exit:       tray icon > Exit. Your normal desktop icons come back.
 Uninstall:  Settings > Apps > Orgodesk > Uninstall. You can keep your Orgos for a later reinstall.
 Stuck?      Run  Orgodesk.exe --restore  to bring the normal desktop icons back.
+Problem?    Orgodesk writes errors to  %APPDATA%\orgodesk\error.log  (tray icon > Open log folder opens
+            the folder). To get help, email support@crc-solutions.org, say what you were doing, and attach
+            error.log. The log has error messages and file paths (these include your Windows user name); it has no
+            license key.
 
 Close Stardock Fences or any other desktop organizer before running Orgodesk.
 Requires Windows 11 (64-bit). Windows 10 is not supported.
