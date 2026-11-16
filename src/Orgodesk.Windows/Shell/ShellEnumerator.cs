@@ -114,11 +114,15 @@ public static class ShellEnumerator
     {
         var result = new List<ShellItemInfo>();
         int hr = folder.EnumObjects(IntPtr.Zero, Const.SHCONTF_FOLDERS | Const.SHCONTF_NONFOLDERS | extraFlags, out var e);
-        if (hr != Const.S_OK || e == null) return result;
+        // FC-51: a failure must not look like an empty folder, or the reconciler empties every Orgo. The caller's
+        // refresh catches the exception, logs it and leaves the layout as it was. S_FALSE / no enumerator = nothing to list.
+        if (hr < 0) Marshal.ThrowExceptionForHR(hr);
+        if (e == null) return result;
         var one = new IntPtr[1];
         try
         {
-            while (e.Next(1, out var child, out var fetched) == Const.S_OK && fetched == 1)
+            int nhr;
+            while ((nhr = e.Next(1, out var child, out var fetched)) == Const.S_OK && fetched == 1)
             {
                 IntPtr absolute = folderPidl == IntPtr.Zero ? Shell32.ILClone(child) : Shell32.ILCombine(folderPidl, child);
                 try
@@ -152,11 +156,17 @@ public static class ShellEnumerator
                     if (absolute != IntPtr.Zero) Shell32.ILFree(absolute);
                 }
             }
+            if (nhr < 0)
+            {
+                // FC-51: stopped part way: a partial list would drop the rest from their Orgos.
+                foreach (var it in result) it.Dispose();
+                Marshal.ThrowExceptionForHR(nhr);
+            }
         }
         finally
         {
             // FC-44: the enumerator holds the desktop folders' find handles until released; waiting for the GC leaked 2 per refresh.
-            Marshal.ReleaseComObject(e);
+            if (Marshal.IsComObject(e)) Marshal.ReleaseComObject(e);
         }
         return result;
     }

@@ -28,6 +28,8 @@ Work toward the first public release, 1.0.0. The version number in `Orgodesk.App
 - Uninstall from Settings > Apps removes the program; it asks whether to keep your Orgos.
 
 ### Fixed
+- A failed desktop scan could have emptied every Orgo; it is now logged and the layout left alone (FC-51).
+- Icons of files that came and went stayed in memory; the cache now drops them (FC-48).
 - Each desktop refresh leaked two handles (four per new desktop file) until garbage collection (FC-44).
 - A layout.json with `null` lists, or a licence-server reply that was not a JSON object, crashed Orgodesk.
 - A rate-limit or other non-404 answer from Gumroad revoked a paying buyer's key.

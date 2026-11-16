@@ -28,6 +28,17 @@ public sealed class IconProvider : IDisposable
         }
     }
 
+    /// <summary>FC-48: drops cached icons of items not in <paramref name="keep"/>, so files that come and go don't pile up.</summary>
+    public void Prune(IEnumerable<string> keep)
+    {
+        var live = new HashSet<string>(keep, StringComparer.OrdinalIgnoreCase);
+        foreach (var k in _cache.Keys.Where(k => !live.Contains(k.key)).ToList())
+        {
+            _cache[k].Dispose();
+            _cache.Remove(k);
+        }
+    }
+
     public void Clear()
     {
         foreach (var b in _cache.Values) b.Dispose();

@@ -118,6 +118,9 @@ public sealed class DesktopModel : IDisposable
                 yield return new ItemRef(f.IsPortal ? f.Id : null, it.Key);
     }
 
+    /// <summary>FC-48: forgets icons of items no longer on the desktop or in a portal.</summary>
+    public void PruneIcons() => Icons.Prune(DesktopItems.Keys.Concat(PortalItems.Values.SelectMany(l => l.Select(i => i.Key))));
+
     public IEnumerable<string> PortalPaths() => Layout.AllFences.Where(f => f.IsPortal).Select(f => f.PortalPath!);
 
     public void Dispose()

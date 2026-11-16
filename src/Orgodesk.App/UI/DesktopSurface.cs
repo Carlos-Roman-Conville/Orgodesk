@@ -364,6 +364,7 @@ public sealed class DesktopSurface : Control
             changed |= result.Changed;
             changed |= LayoutReconciler.EvictFreeIconsUnderFences(_model.Layout.ActivePage, area, m) > 0;
             _model.RefreshPortals();
+            _model.PruneIcons();
             _watcher?.SetWatchedFolders(_model.PortalPaths());
             _selection.RemoveWhere(r => _model.Item(r) == null);
             if (_hover is { } h && _model.Item(h) == null) _hover = null;
