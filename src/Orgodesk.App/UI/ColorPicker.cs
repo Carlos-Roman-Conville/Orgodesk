@@ -53,9 +53,17 @@ public sealed class ColorPicker : FlowLayoutPanel
         return 0.2126 * F(c.R) + 0.7152 * F(c.G) + 0.0722 * F(c.B);
     }
 
+    protected override void OnEnabledChanged(EventArgs e)
+    {
+        base.OnEnabledChanged(e);
+        Refresh();
+    }
+
     public override void Refresh()
     {
-        _swatch.BackColor = _rgb;
+        // Windows draws a disabled button's text in GrayText whatever ForeColor says; on a dark swatch that was
+        // unreadable (FC-53), so a disabled swatch uses the dialog background instead (GrayText on it is 4.5:1).
+        _swatch.BackColor = Enabled ? _rgb : SystemColors.Control;
         _swatch.Text = $"#{_rgb.R:X2}{_rgb.G:X2}{_rgb.B:X2}";   // the value in words, so the swatch is not colour alone
         _swatch.ForeColor = Lum(_rgb) > 0.179 ? Color.Black : Color.White;   // 0.179 = where black and white give equal WCAG contrast
         base.Refresh();

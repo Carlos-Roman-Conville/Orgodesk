@@ -182,7 +182,7 @@ public sealed class SettingsForm : Form
         side.Controls.Add(B("Apply rules &now", (_, _) => { SaveRules(); _surface.ApplyRulesNow(); }));
         var hint = new Label
         {
-            Dock = DockStyle.Bottom, AutoSize = false, Height = 40, Padding = new Padding(6),
+            Dock = DockStyle.Bottom, AutoSize = false, Height = 52, Padding = new Padding(6),   // two lines of 9 pt plus padding (FC-53)
             Text = "Rules run top to bottom; the first match wins. New desktop items are sorted when they appear. \"Apply rules now\" sorts everything.",
         };
         page.Controls.Add(_rules);

@@ -28,6 +28,7 @@ Work toward the first public release, 1.0.0. The version number in `Orgodesk.App
 - Uninstall from Settings > Apps removes the program; it asks whether to keep your Orgos.
 
 ### Fixed
+- Settings > Auto-sort rules cut off its help line; Orgo properties showed a needless scrollbar at 150%; disabled colour swatches were unreadable (FC-53).
 - A failed desktop scan could have emptied every Orgo; it is now logged and the layout left alone (FC-51).
 - Icons of files that came and went stayed in memory; the cache now drops them (FC-48).
 - Each desktop refresh leaked two handles (four per new desktop file) until garbage collection (FC-44).

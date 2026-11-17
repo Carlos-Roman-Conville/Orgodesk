@@ -6,3 +6,5 @@ dist/
 *.suo
 TestResults/
 restore/
+release/
+store/
