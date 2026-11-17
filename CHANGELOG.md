@@ -4,7 +4,9 @@ All notable changes to Orgodesk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
-Work toward the first public release, 1.0.0. The version number in `Orgodesk.App.csproj` is 1.0.0; it is released only after the production gate in `TESTING.md` says GO.
+## [1.0.0] - 2026-11-17
+
+First public release, sold on Gumroad by CRC Solutions. Release build `Orgodesk.exe` SHA-256 `9f83ae3de3849933c96c972f592126ca51d119f748df0b743cf3a5331bf4a081`, built from tag `v1.0.0` with the Gumroad product id set. Pre-launch checks are at the end of `TESTING.md` (Defender scan, Gumroad download match, clean-VM install, on-screen pass).
 
 ### Added
 - Paid version: 14-day trial, Gumroad license keys (5 PCs per key, weekly recheck, 30 days offline), license window and tray entries. Development builds (empty product id) have no trial or key.

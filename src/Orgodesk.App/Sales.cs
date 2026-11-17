@@ -10,8 +10,8 @@ namespace Orgodesk.App;
 /// </summary>
 internal static class Sales
 {
-    public const string ProductId = "";
-    public const string BuyUrl = "";
+    public const string ProductId = "kLLRtCRswECEEILkxXWhIg==";
+    public const string BuyUrl = "https://rexochango.gumroad.com/l/orgodesk";
     public const string SupportEmail = "support@crc-solutions.org";
     /// <summary>
     /// Address of the version file Orgodesk reads once a day to say "a new version is out", e.g.

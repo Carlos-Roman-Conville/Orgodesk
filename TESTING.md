@@ -175,3 +175,5 @@ PASS / FAIL / SKIP with one line of evidence, usually the row above that proves 
 2026-11-17, on-screen pass in the VM (release build, 150%): tray menu + Open log folder, Settings (readable, Esc), Orgo properties portal guard and unplugged-drive portal, rule editor message, licence window with a live Gumroad "not found": all PASS. Details FC-52; cosmetic findings FC-53. Q16/Q17/Q23 now have on-screen evidence at 150% (100%/200% and sleep/resume not run).
 
 2026-11-17: FC-53 fixed and verified on screen (VM, 150%), build 9F83AE3D; new release zip in release\ (Defender clean). The zip on Gumroad (3213698F) is older and needs replacing.
+
+2026-11-17: release 1.0.0 recorded: exe SHA-256 9f83ae3d...a081 (zip on Gumroad 6451c59f...e2a3, its CHANGELOG still headed Unreleased); tag v1.0.0; VirusTotal skipped (Rex).
