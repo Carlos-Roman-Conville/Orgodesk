@@ -177,3 +177,5 @@ PASS / FAIL / SKIP with one line of evidence, usually the row above that proves 
 2026-11-17: FC-53 fixed and verified on screen (VM, 150%), build 9F83AE3D; new release zip in release\ (Defender clean). The zip on Gumroad (3213698F) is older and needs replacing.
 
 2026-11-17: release 1.0.0 recorded: exe SHA-256 9f83ae3d...a081 (zip on Gumroad 6451c59f...e2a3, its CHANGELOG still headed Unreleased); tag v1.0.0; VirusTotal skipped (Rex).
+
+2026-11-18: release 1.0.1 built (FC-44 idle memory fix): exe SHA-256 c61fd156...b707, zip da3d11b5...2960, from tag v1.0.1 (38fee0c). E: was full (0 MB free), so the tag was cloned to `G:\orgodesk-build1.0.1` and built there with the release.bat steps; the files are in its `release\` folder, not in this repo's. 303 of 303 unit tests on the clone; leak probe on the host before the build: flat, 0 bytes of garbage per watchdog tick; Defender scan of the release folder: no threats. Not done: the build has not been started (not in the VM, not on Rex's PC), no install-over-1.0.0 check, no Gumroad upload.
