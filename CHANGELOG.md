@@ -4,6 +4,13 @@ All notable changes to Orgodesk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-18
+
+Built from tag `v1.0.1`. Your Orgos, presets and settings carry over; install it over 1.0.0.
+
+### Fixed
+- Memory crept up by about 2 MB an hour while Orgodesk sat idle: the 2-second background check made throwaway memory that Windows rarely got back. It now makes none (FC-44).
+
 ## [1.0.0] - 2026-11-17
 
 First public release, sold on Gumroad by CRC Solutions. Release build `Orgodesk.exe` SHA-256 `9f83ae3de3849933c96c972f592126ca51d119f748df0b743cf3a5331bf4a081`, built from tag `v1.0.0` with the Gumroad product id set. Pre-launch checks are at the end of `TESTING.md` (Defender scan, Gumroad download match, clean-VM install, on-screen pass).

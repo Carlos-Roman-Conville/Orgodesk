@@ -49,10 +49,15 @@ public static class DesktopWindows
         return found;
     }
 
+    private static IntPtr _listView;
+
     public static bool AreDesktopIconsVisible()
     {
-        var lv = FindListView(FindDefView());
-        return lv != IntPtr.Zero && User32.IsWindowVisible(lv);
+        // FC-44: the watchdog asks every 2 s. Searching the window tree each time made about 750 bytes of garbage
+        // per call (1.4 MB an hour that the collector rarely picks up in an idle app), so the handle is remembered
+        // and looked up again only when that window is gone (Explorer restarted).
+        if (!User32.IsWindow(_listView)) _listView = FindListView(FindDefView());
+        return _listView != IntPtr.Zero && User32.IsWindowVisible(_listView);
     }
 
     /// <summary>
