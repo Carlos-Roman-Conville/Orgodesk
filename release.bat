@@ -1,9 +1,9 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-rem Needs the .NET 10 SDK. Uses a copy in ..\dotnet10\sdk if there is one, else the dotnet on PATH.
+rem Needs the .NET 10 SDK. Uses a copy in ..\..\..\dotnet10\sdk if there is one, else the dotnet on PATH.
 set "DOTNET=dotnet"
-if exist "%~dp0..\dotnet10\sdk\dotnet.exe" set "DOTNET=%~dp0..\dotnet10\sdk\dotnet.exe"
+if exist "%~dp0..\..\..\dotnet10\sdk\dotnet.exe" set "DOTNET=%~dp0..\..\..\dotnet10\sdk\dotnet.exe"
 rem Builds the version you sell. Refuses while Sales.cs has no Gumroad product id,
 rem because that build would have no trial and no license check.
 findstr /r /c:"ProductId = \"\";" src\Orgodesk.App\Sales.cs >nul

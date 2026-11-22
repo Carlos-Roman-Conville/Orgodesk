@@ -1,6 +1,6 @@
 # Orgodesk: design
 
-**Standard check** ([architecture standard](../orgo-suite/ARCHITECTURE-STANDARD.md)): **not written yet**; every section below is a placeholder. Missing: 1 to 9. Until it is written, the design lives in: README.md, SCOPE.md, ISSUES.md and `HQ/handoffs/orgodesk`. The next agent that touches this tool fills in what it can and updates this line. Last checked 2026-11-21 by Claude.
+**Standard check** ([architecture standard](../../../orgo-suite/ARCHITECTURE-STANDARD.md)): **not written yet**; every section below is a placeholder. Missing: 1 to 9. Until it is written, the design lives in: README.md, SCOPE.md, ISSUES.md and `HQ/handoffs/orgodesk`. The next agent that touches this tool fills in what it can and updates this line. Last checked 2026-11-21 by Claude.
 
 ## 1. In plain English
 What the tool does, who it is for, and how it works, in one short paragraph a non-programmer can follow.

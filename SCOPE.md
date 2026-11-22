@@ -29,7 +29,7 @@ and snapshots, as a C# .NET 10 app that takes over desktop icon rendering. Being
 
 ## Rules that apply here
 
-Inherited from [HQ/PRINCIPLES.md](../../HQ/PRINCIPLES.md), plus:
+Inherited from [HQ/PRINCIPLES.md](../../../../HQ/PRINCIPLES.md), plus:
 
 - Never copy Stardock code or assets. Features are fair game; their code and art are not.
 - Core stays free of Windows dependencies so the layout engine can be reused.

@@ -125,7 +125,7 @@ Real-mouse recheck on the .NET 10 build (2026-11-12 04:51, VM at 150%): click se
 2026-11-13: legal blanks filled (New Jersey; effective 13 November 2026; no update emails). New-version notice added (86 unit tests pass). Still blank: `[2]` years for support emails, `[UPDATE HOST]` and `UpdateUrl`. The sleep, lock and second-account checks move to the VM (after the soak); Remote Desktop into the PC is not possible on Windows 11 Home, so that check is not applicable there.
 
 
-### Quality standard (every round; see [QUALITY.md](../QUALITY.md))
+### Quality standard (every round; see [QUALITY.md](../../../QUALITY.md))
 
 Stage now: prototype (2026-11-14 check on d70b106)  Stage aimed at: shipped  (the bar for each stage is QUALITY.md section 3)
 
