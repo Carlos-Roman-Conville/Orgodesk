@@ -52,7 +52,7 @@ public class DeskEditTests
 
         var (p3, _) = d.Do("remove_group", new JsonObject { ["group"] = "Docs" });
         Assert.Contains("\"plan.docx\"", Says(p3));
-        Assert.Contains("1 sort rule go with it", Says(p3));
+        Assert.Contains("1 sort rule goes with it", Says(p3));
         Assert.Contains("No file is deleted or moved", Says(p3));
         Assert.Null(d.Layout.FindFence("projects"));
         Assert.Empty(d.Layout.Rules);

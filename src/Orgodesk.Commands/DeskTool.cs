@@ -366,8 +366,8 @@ public sealed class DeskTool : IOrgoTool
         LayoutReconciler.ReleaseFence(page, page.FindFence(group.Id)!, WorkArea(), Metrics(after));
         int rules = after.Rules.RemoveAll(r => r.TargetFenceId == group.Id);
         var says = new List<string> { "Removes the group \"" + group.Title + "\"" + (group.IsPortal ? " (it showed " + group.PortalPath + ")" : "") + "." };
-        if (group.Items.Count > 0) says.Add("Its " + Count(group.Items.Count, "icon") + " go back onto the desktop: " + Names(group.Items) + ".");
-        if (rules > 0) says.Add("Its " + Count(rules, "sort rule") + " go with it.");
+        if (group.Items.Count > 0) says.Add("Its " + Count(group.Items.Count, "icon") + (group.Items.Count == 1 ? " goes" : " go") + " back onto the desktop: " + Names(group.Items) + ".");
+        if (rules > 0) says.Add("Its " + Count(rules, "sort rule") + (rules == 1 ? " goes" : " go") + " with it.");
         says.Add("No file is deleted or moved.");
         return Layouts(after, says.ToArray());
     }
@@ -544,8 +544,8 @@ public sealed class DeskTool : IOrgoTool
         foreach (var key in released) page.FreeItems[key] = LayoutReconciler.NextFreeSlot(page, WorkArea(), m);
         int rules = layout.Rules.Count(r => r.TargetFenceId == group.Id);
         return Layouts(after, "Makes the group \"" + group.Title + "\" show what is in " + folder + (group.IsPortal ? " instead of " + group.PortalPath : "") + ".",
-            (released.Count > 0 ? "Its " + Count(released.Count, "icon") + " go back onto the desktop: " + Names(released) + ". " : "")
-            + (rules > 0 ? "Its " + Count(rules, "sort rule") + " no longer put icons into it. " : "") + "Files stay where they are.");
+            (released.Count > 0 ? "Its " + Count(released.Count, "icon") + (released.Count == 1 ? " goes" : " go") + " back onto the desktop: " + Names(released) + ". " : "")
+            + (rules > 0 ? "Its " + Count(rules, "sort rule") + (rules == 1 ? " no longer puts" : " no longer put") + " icons into it. " : "") + "Files stay where they are.");
     }
 
     private static Change RollUp(Layout layout, Fence group, bool open)
