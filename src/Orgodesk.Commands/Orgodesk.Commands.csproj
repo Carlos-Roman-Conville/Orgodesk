@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Orgodesk's orgo-commands adapter (orgoai/PLAN.md Phase 1, slice 4): what OrgoAI and scripts may ask of it, and the
+       shared lock the app and command mode both take around layout.json (ISSUES.md FC-55). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Orgodesk.Commands</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Orgodesk.Core\Orgodesk.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\libs\orgo-commands\src\Orgo.Commands\Orgo.Commands.csproj" />
+  </ItemGroup>
+</Project>

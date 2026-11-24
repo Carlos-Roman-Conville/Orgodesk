@@ -21,5 +21,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Orgodesk.Core\Orgodesk.Core.csproj" />
     <ProjectReference Include="..\Orgodesk.Windows\Orgodesk.Windows.csproj" />
+    <ProjectReference Include="..\Orgodesk.Commands\Orgodesk.Commands.csproj" />
+    <!-- The AI-connection gate (crc-appshell kit-1.10, D-11) and its key window. Orgodesk's own app licence stays in
+         Orgodesk.Core.Licensing for now (ISSUES.md FC-56). -->
+    <ProjectReference Include="..\..\..\..\libs\crc-appshell\src\Crc.AppShell.WinForms\Crc.AppShell.WinForms.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Orgodesk.Commands.Tests" />
   </ItemGroup>
 </Project>

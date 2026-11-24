@@ -23,6 +23,9 @@ public sealed class TrayContext : ApplicationContext
     private DesktopMouseHook? _mouseHook;
     private EventWaitHandle? _exitEvent;
     private RegisteredWaitHandle? _exitWait;
+    /// <summary>Command mode's events for this data folder (FC-55): reload layout.json, quick hide, quick show.</summary>
+    private EventWaitHandle[]? _commandEvents;
+    private readonly List<RegisteredWaitHandle> _commandWaits = new();
     private bool _exiting;
     private UpdateInfo? _update;
     private bool _updateBalloonUp;
@@ -38,8 +41,9 @@ public sealed class TrayContext : ApplicationContext
         _store = store;
         _licenseStore = licenseStore;
         _license = license;
-        _model = new DesktopModel(store.LoadLayout(), store.LoadSettings());
-        _surface = new DesktopSurface(_model, store);
+        var shared = new Orgodesk.Commands.SharedLayout(store, Program.CommandsName);   // FC-55: the lock command mode takes too
+        _model = new DesktopModel(shared.Load(), store.LoadSettings());
+        _surface = new DesktopSurface(_model, shared);
         _surface.ExitRequested += (_, _) => Exit();
         _surface.SettingsRequested += (_, _) => ShowSettings();
         _surface.SnapshotsRequested += (_, _) => ShowSnapshots();
@@ -93,6 +97,7 @@ public sealed class TrayContext : ApplicationContext
         {
             try { _surface.BeginInvoke(new Action(Exit)); } catch { }
         }, null, -1, executeOnlyOnce: true);
+        ListenForCommands();
         var lic = LicenseRules.Evaluate(_license, Sales.Config, DateTime.UtcNow);
         if (lic.State == LicenseState.Trial && lic.TrialDaysLeft <= 3)
             _tray.ShowBalloonTip(8000, "Orgodesk", $"{lic.Message}. Right-click the tray icon and choose License to buy a key.", ToolTipIcon.Info);
@@ -166,6 +171,7 @@ public sealed class TrayContext : ApplicationContext
             menu.Items.Add("Refresh icons", null, (_, _) => { _model.Icons.Clear(); _surface.RefreshDesktop(); });
             menu.Items.Add(new ToolStripSeparator());
             if (lic.State != LicenseState.DevBuild) menu.Items.Add("License...", null, (_, _) => ShowLicense());
+            menu.Items.Add("AI connection...", null, (_, _) => ShowAiConnection());
             var ver = typeof(TrayContext).Assembly.GetName().Version;
             menu.Items.Add(new ToolStripMenuItem($"Orgodesk {ver?.Major}.{ver?.Minor}.{ver?.Build}") { Enabled = false });   // so a support message can name the build
             if (Sales.UpdateUrl.Length > 0) menu.Items.Add("Check for a new version now", null, (_, _) => _ = CheckForUpdateAsync(byHand: true));
@@ -333,11 +339,51 @@ public sealed class TrayContext : ApplicationContext
         _dailyTimer?.Dispose();
         _dailyTimer = null;
         _exitWait?.Unregister(null);
+        foreach (var w in _commandWaits) w.Unregister(null);
         _surface.Shutdown();
+        if (_commandEvents != null) foreach (var e in _commandEvents) e.Dispose();
         try { DesktopWindows.SetDesktopIconsVisible(true); } catch { }
         ClearHiddenFlag();
         _model.Dispose();
         ExitThread();
+    }
+
+    /// <summary>
+    /// Command mode tells the running app what it changed through named events (FC-55): reload layout.json, hide or show
+    /// the icons. Each is handled on the UI thread, where the layout and the lock's hold live.
+    /// </summary>
+    private void ListenForCommands()
+    {
+        try
+        {
+            var signals = new Orgodesk.Commands.DeskSignals(_store.RootDir);
+            _commandEvents = signals.Create();
+            Action[] handlers = { _surface.ReloadFromCommands, () => _surface.SetQuickHide(true), () => _surface.SetQuickHide(false) };
+            for (int i = 0; i < _commandEvents.Length; i++)
+            {
+                var handler = handlers[i];
+                _commandWaits.Add(ThreadPool.RegisterWaitForSingleObject(_commandEvents[i], (_, _) =>
+                {
+                    try { _surface.BeginInvoke(handler); } catch (InvalidOperationException) { }   // no window yet or any more
+                }, null, -1, executeOnlyOnce: false));
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or WaitHandleCannotBeOpenedException)
+        {
+            Log.Error("Could not listen for orgo commands; changes made through them show at the next start", ex);
+        }
+    }
+
+    /// <summary>The AI connection's key window (crc-appshell kit-1.10). Its licence is loaded on the click, since loading
+    /// starts the suite trial.</summary>
+    private void ShowAiConnection()
+    {
+        try { Crc.AppShell.WinForms.CommandLicenseForm.ShowFor(DialogOwner.Get(), Crc.AppShell.Commands.CommandLicense.Load(Sales.Commands)); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            Log.Error("Could not open the AI connection window", ex);
+            MessageBox.Show(DialogOwner.Get(), "Orgodesk could not read the AI connection's licence: " + ex.Message, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private static Icon MakeTrayIcon()

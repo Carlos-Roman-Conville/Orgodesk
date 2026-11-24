@@ -18,9 +18,71 @@ internal static class Program
 
 
 
+    /// <summary>The tool's name for orgo-commands: its lock, its registry entry and the CLI's <c>orgo orgodesk</c>.</summary>
+    public const string CommandsName = Orgodesk.Commands.DeskTool.ToolName;
+
+    /// <summary>
+    /// orgo-commands (orgoai/PLAN.md Phase 1, FC-55): one JSON request on standard input, one answer out, no window, no
+    /// one-copy mutex, behind the AI-connection gate (crc-appshell kit-1.10). Changes go to layout.json under the shared
+    /// lock, which the running app takes for its own saves, and the app is told to show them. <c>--data</c> points it at
+    /// another data folder (tests, VM copies); the running app always uses the default one.
+    /// </summary>
+    private static int CommandMode(string[] args)
+    {
+        string data = LayoutStore.DefaultRoot;
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == "--data") data = Path.GetFullPath(args[i + 1]);
+        return CommandMode(data, CommandsName, Crc.AppShell.Commands.CommandLicense.Load(Sales.Commands));
+    }
+
+    /// <summary>Command mode against a data folder and a lock name of the caller's (tests pass their own of both).</summary>
+    internal static int CommandMode(string data, string lockName, Crc.AppShell.Commands.CommandLicense license,
+        TextReader? input = null, TextWriter? output = null)
+    {
+        var answer = license.CheckAsync().GetAwaiter().GetResult();   // a due key check may wait up to 5 s
+        var store = new LayoutStore(data);
+        var tool = new Orgodesk.Commands.DeskTool(new Orgodesk.Commands.SharedLayout(store, lockName), new Orgodesk.Commands.DeskSignals(data), Version())
+        {
+            WorkArea = () => ScreenInfo.PrimaryWorkArea,
+            Desktop = () => ReadDesktop(store),
+            KnownFolder = Windows.Shell.KnownFolders.Path,
+        };
+        return Orgo.Commands.Stdio.Serve(tool, answer.Refuse, input, output,
+            new Orgo.Commands.AiConnection(answer.AccessName, answer.Why, answer.TrialDaysLeft));
+    }
+
+    /// <summary>What the desktop shows now, as the app reads it (items already placed in a group are kept); null when
+    /// the shell cannot be read, so a command never takes "nothing there" for the truth (FC-51).</summary>
+    private static IReadOnlyList<Core.Rules.ItemFacts>? ReadDesktop(LayoutStore store)
+    {
+        try
+        {
+            var layout = store.PeekLayout(out _);
+            var placed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (layout != null)
+                foreach (var page in layout.Pages.Concat(layout.Presets))
+                {
+                    placed.UnionWith(page.FreeItems.Keys);
+                    foreach (var f in page.Fences.Where(f => !f.IsPortal)) placed.UnionWith(f.Items);
+                }
+            var items = Windows.Shell.ShellEnumerator.EnumerateDesktop(placed);
+            try { return items.Select(i => i.ToFacts()).ToList(); }
+            finally { foreach (var i in items) i.Dispose(); }
+        }
+        catch (Exception ex) when (ex is COMException or InvalidOperationException or UnauthorizedAccessException)
+        {
+            Log.Error("Could not read the desktop for a command", ex);
+            return null;
+        }
+    }
+
+    /// <summary>The app's version as 1.0.1 (the csproj's Version).</summary>
+    private static string Version() => typeof(Program).Assembly.GetName().Version is { } v ? $"{v.Major}.{v.Minor}.{v.Build}" : "0.0.0";
+
     [STAThread]
     private static int Main(string[] args)
     {
+        if (Orgo.Commands.Stdio.Wanted(args)) return CommandMode(args);
         LayoutStore.MigrateLegacyRoot();
         if (args.Any(a => a.Equals("--restore", StringComparison.OrdinalIgnoreCase)))
         {
@@ -88,6 +150,9 @@ internal static class Program
         };
 
         Log.Info($"Started (pid {Environment.ProcessId}){(args.Length > 0 ? " args: " + string.Join(' ', args) : "")}");
+        // So the orgo command line (and OrgoAI) can find this exe. A failure only means commands cannot reach Orgodesk.
+        try { new Orgo.Commands.ToolRegistry().Register(CommandsName, Environment.ProcessPath!, Version()); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException) { Log.Error("Could not register for orgo commands", ex); }
         var store = new LayoutStore(LayoutStore.DefaultRoot);
 
         // Trial and license gate. Runs before the real desktop icons are hidden, so leaving here is always safe.

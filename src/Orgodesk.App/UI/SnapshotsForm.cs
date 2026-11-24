@@ -65,7 +65,7 @@ public sealed class SnapshotsForm : Form
         var name = Prompt.Show("Save snapshot", "Snapshot name:", DateTime.Now.ToString("yyyy-MM-dd HH-mm"), this);
         if (string.IsNullOrWhiteSpace(name)) return;
         _surface.SaveNow();
-        _store.SaveSnapshot(name, _model.Layout);
+        if (!_surface.Shared.Run(() => _store.SaveSnapshot(name, _model.Layout), TimeSpan.FromSeconds(10))) { Busy(); return; }
         Reload();
     }
 
@@ -89,7 +89,11 @@ public sealed class SnapshotsForm : Form
         if (Selected is not { } s) return;
         if (MessageBox.Show(this, $"Delete snapshot \"{s.Name}\"?", "Delete snapshot",
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK) return;
-        _store.DeleteSnapshot(s.Name);
+        if (!_surface.Shared.Run(() => _store.DeleteSnapshot(s.Name), TimeSpan.FromSeconds(10))) { Busy(); return; }
         Reload();
     }
+
+    /// <summary>FC-55: a command held the layout lock past the wait; nothing was saved or deleted.</summary>
+    private void Busy() => MessageBox.Show(this, "An AI or script is changing the desktop layout right now, so nothing was done. Try again in a moment.",
+        "Layout snapshots", MessageBoxButtons.OK, MessageBoxIcon.Information);
 }

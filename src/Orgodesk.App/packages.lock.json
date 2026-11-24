@@ -2,6 +2,31 @@
   "version": 1,
   "dependencies": {
     "net10.0-windows7.0": {
+      "crc.appshell": {
+        "type": "Project"
+      },
+      "crc.appshell.winforms": {
+        "type": "Project",
+        "dependencies": {
+          "Crc.AppShell": "[1.0.0, )"
+        }
+      },
+      "orgo.commands": {
+        "type": "Project",
+        "dependencies": {
+          "Orgo.FileCore": "[0.1.0, )"
+        }
+      },
+      "orgo.filecore": {
+        "type": "Project"
+      },
+      "orgodesk.commands": {
+        "type": "Project",
+        "dependencies": {
+          "Orgo.Commands": "[0.4.0, )",
+          "Orgodesk.Core": "[1.0.0, )"
+        }
+      },
       "orgodesk.core": {
         "type": "Project"
       },

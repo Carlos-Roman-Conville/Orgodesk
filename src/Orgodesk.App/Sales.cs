@@ -21,4 +21,29 @@ internal static class Sales
     public const string UpdateUrl = "";
 
     public static readonly SalesConfig Config = new(ProductId, BuyUrl);
+
+    /// <summary>
+    /// Pro: Orgodesk has no Pro (App Premium) tier, and that is on purpose for now. Every feature, and every command
+    /// action, is part of the app; nothing answers needs_pro (Rex 2026-11-23: premium is decided app by app later,
+    /// CONTROLLER-HANDOFF "premium decided app by app"). When Rex decides one, it goes here as crc-appshell's SalesConfig.
+    /// </summary>
+    public const bool ProIsFreeForNow = true;
+
+    /// <summary>
+    /// The AI connection (suite PLAN.md amendment "AI only in the suite bundle"; crc-appshell DESIGN.md D-3 to D-9 and
+    /// D-11, kit-1.10): command mode needs the suite bundle's key or the suite's 30-day trial, then is read-only (list and
+    /// status). Orgodesk has no AI product of its own: the bundle's id lives in the kit (<c>OrgoSuite.BundleProductId</c>).
+    /// The app's window and tray never ask it.
+    /// </summary>
+    public static readonly Crc.AppShell.Commands.CommandSales Commands = new("Orgodesk", DevBuild);
+
+#if DEBUG
+    /// <summary>A Debug build is a development build: command mode open, no AI-connection check (D-11). Never ship one.</summary>
+    public const bool DevBuild = true;
+#else
+    public const bool DevBuild = false;
+    // D-9 as amended by D-11 (Rex 2026-11-23): a Release build stops here (CS0020, division by constant zero) while the
+    // suite bundle's product id is empty, so a release never ships the AI connection free. Fill it in (Gumroad, in the kit).
+    private const int ReleaseNeedsTheBundleId = 1 / (Crc.AppShell.Commands.OrgoSuite.BundleProductId == "" ? 0 : 1);
+#endif
 }

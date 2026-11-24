@@ -81,6 +81,36 @@ public sealed class LayoutStore
         return l;
     }
 
+    /// <summary>
+    /// Reads layout.json and writes nothing: no backup copy, no repair (command mode looks without the lock). A missing file
+    /// is an empty layout; a damaged one is null with <paramref name="damaged"/> set, so the caller refuses instead of
+    /// planning over a layout it could not read.
+    /// </summary>
+    public Layout? PeekLayout(out bool damaged)
+    {
+        damaged = false;
+        if (!File.Exists(LayoutPath)) { var empty = new Layout(); Normalize(empty); return empty; }
+        try
+        {
+            var l = JsonSerializer.Deserialize<Layout>(File.ReadAllText(LayoutPath), JsonDefaults.Options);
+            if (l != null) { Normalize(l); return l; }
+        }
+        catch (Exception ex) when (ex is JsonException or IOException) { }
+        damaged = true;
+        return null;
+    }
+
+    /// <summary>settings.json, or the defaults when it is missing or damaged; writes nothing.</summary>
+    public AppSettings PeekSettings()
+    {
+        try { return File.Exists(SettingsPath) ? JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(SettingsPath), JsonDefaults.Options) ?? new() : new(); }
+        catch (Exception ex) when (ex is JsonException or IOException) { return new(); }
+    }
+
+    /// <summary>A snapshot's file, or null when there is none of that name.</summary>
+    public SnapshotInfo? FindSnapshot(string name) =>
+        ListSnapshots().FirstOrDefault(s => string.Equals(s.Name, SanitizeName(name), StringComparison.OrdinalIgnoreCase));
+
     public void SaveLayout(Layout layout)
     {
         Normalize(layout);

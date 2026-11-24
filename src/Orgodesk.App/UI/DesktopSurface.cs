@@ -28,6 +28,8 @@ public sealed class DesktopSurface : Control
 
     private readonly DesktopModel _model;
     private readonly LayoutStore _store;
+    /// <summary>layout.json under the lock shared with command mode (FC-55).</summary>
+    private readonly Orgodesk.Commands.SharedLayout _shared;
     private readonly SurfaceRenderer _renderer;
     private ShellChangeWatcher? _watcher;
     private bool _watcherStale;   // Explorer refused the registrations; try again on the next watchdog tick
@@ -78,13 +80,15 @@ public sealed class DesktopSurface : Control
 
     public DesktopModel Model => _model;
     public bool QuickHidden => _quickHidden;
+    public Orgodesk.Commands.SharedLayout Shared => _shared;
     public bool Suspended => _suspended;
     public bool IsAttached => IsHandleCreated && _parentHwnd != IntPtr.Zero && User32.IsWindow(_parentHwnd);
 
-    public DesktopSurface(DesktopModel model, LayoutStore store)
+    public DesktopSurface(DesktopModel model, Orgodesk.Commands.SharedLayout shared)
     {
         _model = model;
-        _store = store;
+        _shared = shared;
+        _store = shared.Store;
         _renderer = new SurfaceRenderer(model);
         SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque
                | ControlStyles.Selectable | ControlStyles.StandardClick | ControlStyles.StandardDoubleClick, true);
@@ -406,17 +410,34 @@ public sealed class DesktopSurface : Control
 
     public void SaveSoon()
     {
+        _shared.Hold();   // FC-55: from the person's change until its save, a command cannot write layout.json
         _saveTimer.Stop();
         _saveTimer.Start();
     }
 
     private bool _saveFailureShown;
+    private bool _busyLogged;
 
     public void SaveNow()
     {
         try
         {
-            _store.SaveLayout(_model.Layout);
+            switch (_shared.Save(_model.Layout, out var disk))
+            {
+                case Orgodesk.Commands.SharedLayout.Outcome.Busy:
+                    // A command is writing layout.json right now; save again in a moment (it tells this app to reload).
+                    if (!_busyLogged) Log.Info("Layout save waits: a command holds the lock");
+                    _busyLogged = true;
+                    if (!_closing) SaveSoon();
+                    return;
+                case Orgodesk.Commands.SharedLayout.Outcome.TookDisk:
+                    // A command changed layout.json since this app last read or wrote it: show that, never write over it.
+                    Log.Info("layout.json was changed through commands; showing that layout instead of saving over it");
+                    _busyLogged = false;
+                    if (!_closing) ReplaceLayout(disk!);
+                    return;
+            }
+            _busyLogged = false;
             _saveFailureShown = false;
         }
         catch (Exception ex)
@@ -478,10 +499,20 @@ public sealed class DesktopSurface : Control
         if (_suspended) Resume(); else Suspend();
     }
 
-    public void ToggleQuickHide()
+    public void ToggleQuickHide() => SetQuickHide(!_quickHidden);
+
+    /// <summary>Hides or shows every icon and Orgo (quick hide, also asked for through commands).</summary>
+    public void SetQuickHide(bool hidden)
     {
-        _quickHidden = !_quickHidden;
+        _quickHidden = hidden;
         RequestRender();
+    }
+
+    /// <summary>After a command changed layout.json: show the layout on disk (FC-55). Nothing when it is unchanged.</summary>
+    public void ReloadFromCommands()
+    {
+        if (_closing) return;
+        if (_shared.Changed() is { } layout) { Log.Info("Showing a layout changed through commands"); ReplaceLayout(layout); }
     }
 
     public Fence CreateFence(Rectangle bounds, string? title = null, string? portalPath = null)
@@ -1689,6 +1720,7 @@ public sealed class DesktopSurface : Control
         SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
         SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
         SaveNow();
+        _shared.Release();   // a save that failed or waited leaves no hold behind
         _watcher?.Dispose();
         _watcher = null;
         if (IsHandleCreated) DestroyHandle();
