@@ -5,7 +5,8 @@ All notable changes to Orgodesk are listed here. The format follows [Keep a Chan
 ## [Unreleased]
 
 ### Fixed
-- Orgos on a monitor that is unplugged for a moment (a cable pulled out and back in) go back to that monitor when it returns, instead of staying piled on the main screen at the wrong size (FC-67).
+- Orgos on a monitor that is unplugged for a moment (a cable pulled out and back in) go back to that monitor when it returns, instead of staying piled on the main screen at the wrong size; loose desktop icons do the same (FC-67).
+- Switching a preset through OrgoAI keeps groups on a second monitor instead of moving them onto the main screen (FC-69).
 
 ## [1.1.0] - unreleased
 

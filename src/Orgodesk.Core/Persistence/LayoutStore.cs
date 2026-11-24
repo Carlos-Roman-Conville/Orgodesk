@@ -202,6 +202,8 @@ public sealed class LayoutStore
             if (string.IsNullOrWhiteSpace(p.Name)) p.Name = $"Page {i + 1}";
             if (p.FreeItems.Comparer != StringComparer.OrdinalIgnoreCase)
                 p.FreeItems = new Dictionary<string, System.Drawing.Point>(p.FreeItems, StringComparer.OrdinalIgnoreCase);
+            if (p.FreeHomes?.Comparer != StringComparer.OrdinalIgnoreCase)
+                p.FreeHomes = new Dictionary<string, System.Drawing.Point>(p.FreeHomes ?? new(), StringComparer.OrdinalIgnoreCase);
         }
         // Presets saved before 2026-11-06 could share one id; give duplicates their own.
         var presetIds = new HashSet<string>();

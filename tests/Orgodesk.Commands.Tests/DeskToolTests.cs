@@ -134,6 +134,15 @@ public class DeskToolTests
     }
 
     [Fact]
+    public void Preset_keeps_a_group_on_the_second_monitor()
+    {
+        // FC-69: switching a preset through commands pulled every group onto the main screen.
+        using var d = new Desk(l => l.Presets[0].Fences[0].Bounds = new System.Drawing.Rectangle(-1500, 100, 300, 240));
+        Assert.True(d.Do("preset", new JsonObject { ["name"] = "Gaming" }).Apply["ok"]!.GetValue<bool>());
+        Assert.Equal(-1500, d.Layout.ActivePage.Fences.Single(f => f.Title == "Games").Bounds.X);
+    }
+
+    [Fact]
     public void Preset_save_preset_roll_up_and_snapshot_save_apply()
     {
         using var d = new Desk();

@@ -35,6 +35,8 @@ public sealed class DeskTool : IOrgoTool
 
     /// <summary>The primary monitor's work area, for placing a new group.</summary>
     public Func<Rectangle> WorkArea { get; init; } = () => new Rectangle(0, 0, 1920, 1040);
+    /// <summary>The whole virtual screen (every monitor), which groups are kept inside, as the app does (FC-69).</summary>
+    public Func<Rectangle>? Screen { get; init; }
     /// <summary>The items on the desktop now, or null when the desktop could not be read.</summary>
     public Func<IReadOnlyList<ItemFacts>?> Desktop { get; init; } = () => null;
     /// <summary>A known folder's path by its English name ("Downloads"), or null.</summary>
@@ -504,7 +506,7 @@ public sealed class DeskTool : IOrgoTool
             "There is no preset called \"" + name + "\"; " + (layout.Presets.Count == 0 ? "none is saved yet (save_preset saves one)" : "the presets are " + Names(layout.Presets.Select(p => p.Name).ToList())));
         var after = layout.Clone();
         Presets.Apply(after, preset.Id);
-        LayoutReconciler.ClampToArea(after, WorkArea(), Metrics(after));
+        LayoutReconciler.ClampToArea(after, (Screen ?? WorkArea)(), Metrics(after));
         return Layouts(after, "Switches the desktop" + PageWords(after) + " to the preset \"" + preset.Name + "\": " + Holds(preset) + " in their saved places.",
             "Icons the preset does not know get a free spot.");
     }

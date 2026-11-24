@@ -62,6 +62,7 @@ internal static class Program
         var tool = new Orgodesk.Commands.DeskTool(new Orgodesk.Commands.SharedLayout(store, lockName), new Orgodesk.Commands.DeskSignals(data), Version())
         {
             WorkArea = () => ScreenInfo.PrimaryWorkArea,
+            Screen = () => ScreenInfo.VirtualScreen,
             Desktop = () => ReadDesktop(store),
             KnownFolder = Windows.Shell.KnownFolders.Path,
         };

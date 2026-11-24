@@ -83,11 +83,18 @@ public sealed class Page
     /// <summary>Free icons: item key to top-left position (virtual-screen pixels).</summary>
     public Dictionary<string, Point> FreeItems { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// FC-67: free icons a display change pulled onto another screen, and where they were. Each goes back when that
+    /// cell is on screen and free again; taking the icon out of the page (a drag, a move into a fence) forgets it.
+    /// </summary>
+    public Dictionary<string, Point> FreeHomes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
     public Page Clone()
     {
         var p = (Page)MemberwiseClone();
         p.Fences = Fences.Select(f => f.Clone()).ToList();
         p.FreeItems = new Dictionary<string, Point>(FreeItems, StringComparer.OrdinalIgnoreCase);
+        p.FreeHomes = new Dictionary<string, Point>(FreeHomes, StringComparer.OrdinalIgnoreCase);
         return p;
     }
 
@@ -101,6 +108,7 @@ public sealed class Page
     public bool Remove(string key)
     {
         bool any = FreeItems.Remove(key);
+        FreeHomes.Remove(key);   // moved by the person or into a fence: that is its place now
         foreach (var f in Fences)
             any |= f.Items.RemoveAll(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase)) > 0;
         return any;

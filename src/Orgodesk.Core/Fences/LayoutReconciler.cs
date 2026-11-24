@@ -126,11 +126,21 @@ public static class LayoutReconciler
                 var nb = FenceLayoutEngine.ClampBounds(f.Bounds, area, m);
                 if (nb != f.Bounds) { f.HomeBounds ??= f.Bounds; f.Bounds = nb; changed++; }
             }
+            // FC-67: icons a display change pulled away go back once their old cell is on screen and free again.
+            foreach (var (key, home) in page.FreeHomes.ToList())
+            {
+                if (!page.FreeItems.TryGetValue(key, out var now)) { page.FreeHomes.Remove(key); continue; }   // gone
+                if (!area.Contains(FreeGrid.CellAt(home, m))) continue;
+                page.FreeItems.Remove(key);
+                if (IsFree(page, home, m)) { page.FreeItems[key] = home; page.FreeHomes.Remove(key); changed++; }
+                else page.FreeItems[key] = now;
+            }
             var outside = page.FreeItems.Where(kv => !area.Contains(FreeGrid.CellAt(kv.Value, m))).Select(kv => kv.Key).ToList();
             foreach (var key in outside)
             {
                 var p = page.FreeItems[key];
                 page.FreeItems.Remove(key);
+                page.FreeHomes.TryAdd(key, p);
                 var snapped = FreeGrid.Snap(new Point(
                     Math.Clamp(p.X, area.X, Math.Max(area.X, area.Right - m.CellWidth)),
                     Math.Clamp(p.Y, area.Y, Math.Max(area.Y, area.Bottom - m.CellHeight))), area, m);
@@ -200,6 +210,7 @@ public static class LayoutReconciler
                 var target = FreeGrid.Snap(new Point(S(p.X, area.X), S(p.Y, area.Y)), area, m);
                 page.FreeItems[key] = IsFree(page, target, m) ? target : NextFreeSlot(page, area, m);
             }
+            foreach (var (key, h) in page.FreeHomes.ToList()) page.FreeHomes[key] = new Point(S(h.X, area.X), S(h.Y, area.Y));
         }
         layout.GridScale = scale;
         return true;

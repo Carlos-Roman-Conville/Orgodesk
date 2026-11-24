@@ -70,4 +70,71 @@ public class MonitorReturnTests
             try { Directory.Delete(root, recursive: true); } catch { }
         }
     }
+
+    // Free icons (not in an Orgo) pulled off the left monitor go back the same way.
+    private static readonly Point IconOnLeft = new(-1848, 184);
+
+    private static Layout IconOnTheLeft()
+    {
+        var l = new Layout();
+        l.ActivePage.FreeItems["left.lnk"] = IconOnLeft;
+        l.ActivePage.FreeItems["main.lnk"] = new Point(0, 0);
+        return l;
+    }
+
+    [Fact]
+    public void FreeIconGoesBackWhenItsMonitorReturns()
+    {
+        var m = LayoutMetrics.Default;
+        var l = IconOnTheLeft();
+        LayoutReconciler.ClampToArea(l, MainOnly, m);
+        Assert.True(MainOnly.Contains(FreeGrid.CellAt(l.ActivePage.FreeItems["left.lnk"], m)));
+        LayoutReconciler.ClampToArea(l, BothScreens, m);
+        Assert.Equal(IconOnLeft, l.ActivePage.FreeItems["left.lnk"]);
+        Assert.Equal(new Point(0, 0), l.ActivePage.FreeItems["main.lnk"]);
+        Assert.Empty(l.ActivePage.FreeHomes);
+    }
+
+    [Fact]
+    public void AFreeIconMovedByHandWhileAwayStaysWhereItWasPut()
+    {
+        var m = LayoutMetrics.Default;
+        var l = IconOnTheLeft();
+        LayoutReconciler.ClampToArea(l, MainOnly, m);
+        l.ActivePage.Remove("LEFT.lnk");   // a drag takes the icon out first, then puts it down (any case of the name)
+        l.ActivePage.FreeItems["left.lnk"] = new Point(880, 460);
+        LayoutReconciler.ClampToArea(l, BothScreens, m);
+        Assert.Equal(new Point(880, 460), l.ActivePage.FreeItems["left.lnk"]);
+    }
+
+    [Fact]
+    public void AFreeIconNeverGoesBackOntoAnother()
+    {
+        var m = LayoutMetrics.Default;
+        var l = IconOnTheLeft();
+        LayoutReconciler.ClampToArea(l, MainOnly, m);
+        var pulledTo = l.ActivePage.FreeItems["left.lnk"];
+        l.ActivePage.FreeItems["new.lnk"] = IconOnLeft;   // something took its old cell meanwhile
+        LayoutReconciler.ClampToArea(l, BothScreens, m);
+        Assert.Equal(pulledTo, l.ActivePage.FreeItems["left.lnk"]);
+    }
+
+    [Fact]
+    public void FreeIconHomeSurvivesARestart()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "orgodesk-tests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var l = IconOnTheLeft();
+            LayoutReconciler.ClampToArea(l, MainOnly, LayoutMetrics.Default);
+            var store = new LayoutStore(root);
+            store.SaveLayout(l);
+            var back = store.LoadLayout();
+            Assert.Equal(IconOnLeft, back.ActivePage.FreeHomes["LEFT.LNK"]);
+        }
+        finally
+        {
+            try { Directory.Delete(root, recursive: true); } catch { }
+        }
+    }
 }

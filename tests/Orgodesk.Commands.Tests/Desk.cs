@@ -47,6 +47,7 @@ public sealed class Desk : IDisposable
         Tool = new DeskTool(new SharedLayout(Store, Lock), Signals, "1.0.1")
         {
             WorkArea = () => new Rectangle(0, 0, 1920, 1040),
+            Screen = () => new Rectangle(-1920, 0, 3840, 1080),   // a second monitor left of the main one
             Desktop = () => DesktopUnreadable ? null : Items.ToList(),
             KnownFolder = n => n.Equals("Downloads", StringComparison.OrdinalIgnoreCase) ? Downloads
                              : n.Equals("Desktop", StringComparison.OrdinalIgnoreCase) ? DesktopDir : null,
