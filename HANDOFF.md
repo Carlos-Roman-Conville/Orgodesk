@@ -3,6 +3,14 @@
 Where the work stands, for the next agent. Issues are in [ISSUES.md](ISSUES.md), decisions in [DESIGN.md](DESIGN.md)
 section 7, release state in [TESTING.md](TESTING.md).
 
+## Unfinished (end of the 2026-11-24 session)
+
+- **Release blockers outside this repo:** the suite bundle's Gumroad product id (`OrgoSuite.BundleProductId` in crc-appshell); until it is set a Release build and the Release installer stop at CS0020 (intended). A code-signing certificate (Rex): the first run of the unsigned exe costs 2.5 to 5.6 s before `Main` (FC-66; 4 of 5 cold starts within 5 s, the 5-of-5 target was not met).
+- **Not built:** pages through commands; pruning old "Before AI change" snapshots; moving Orgodesk's own licence copy (`Orgodesk.Core.Licensing`) to crc-appshell (FC-56); the Qwen pass rate for the 14 command actions.
+- **Not run:** a Defender and SmartScreen scan of the installer, Windows 10, the installer wizard's tasks page by eye, a VM soak of the new command mode.
+- **Open rows:** FC-58 (library has no undo for non-file changes; orgo-commands OC-14), FC-63 (empty program folder after uninstall, Low), FC-66 (fold under release prep's FC-64 when branch `v1-rc` merges; that branch numbers release prep's rows FC-64/65 and this repo's installer rows FC-62/63).
+- **Never edit** the untracked `tests/Orgodesk.LeakProbe/packages.lock.json` unless it is yours.
+
 ## 2026-11-23: command mode for OrgoAI (FC-55) and the AI-connection gate (FC-56)
 
 **Built, on main, not in a release.** OrgoAI's first version ships with Orgodesk (controller decision 8aca5a5).
