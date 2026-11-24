@@ -122,6 +122,9 @@ try {
         }
     } finally { Pop-Location }
 
+    # The bare published exes beside the installer, for cold-start timing (a file's first run is the slow one: FC-66).
+    $exeDir = Join-Path $out 'exe'; New-Item -ItemType Directory -Force $exeDir | Out-Null
+    Get-ChildItem (Join-Path $appTree $pubOut) -Filter *.exe -File | Copy-Item -Destination $exeDir
     $complete = $true; $note = ''
     $files = @()
     if ($Cfg.Kind -eq 'installer' -and $issPath -and (Test-Path $issPath)) {
@@ -160,6 +163,7 @@ try {
         libs = $libShas; dotnetSdk = (& $Dotnet --version); builtUtc = (Get-Date).ToUniversalTime().ToString('o')
         complete = $complete; note = $note; placeholderBundleId = $placeholder
         label = $(if ($placeholder) { $label } else { '' }); files = @($entries)
+        exes = @(Get-ChildItem $exeDir -File | ForEach-Object { [ordered]@{ file = $_.Name; bytes = $_.Length; sha256 = (Get-FileHash $_.FullName -Algorithm SHA256).Hash } })
     }
     $manifest | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $out 'rc.json')
     "$($entries | ForEach-Object { "$($_.sha256)  $($_.file)" })" | Set-Content (Join-Path $out 'SHA256SUMS.txt')
