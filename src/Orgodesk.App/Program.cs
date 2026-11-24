@@ -171,6 +171,7 @@ internal static class Program
         }
 
         ApplicationConfiguration.Initialize();   // before any dialog, including the install offer below
+        Crc.AppShell.WinForms.AppIcon.UseForEveryWindow();   // every window shows the app's icon (UI.md 2.4.1)
 
         // A buyer who double-clicks the downloaded exe gets offered a proper install (Start Menu, start with Windows,
         // Settings > Apps entry) instead of running from Downloads. Asked before the single-instance lock, because the

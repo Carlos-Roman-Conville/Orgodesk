@@ -16,6 +16,7 @@
 #define DataDir "{userappdata}\orgodesk"
 
 [Setup]
+SetupIconFile=..\src\Orgodesk.App\Orgodesk.ico
 ; Never change the AppId after the first release: Windows uses it to find the installed copy to upgrade.
 AppId={{F3FD4A7E-5137-4FEA-BE79-9BE6ADF2C86C}
 AppName={#AppName}
