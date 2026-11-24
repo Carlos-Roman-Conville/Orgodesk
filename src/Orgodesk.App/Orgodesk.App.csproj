@@ -10,7 +10,7 @@
     <RootNamespace>Orgodesk.App</RootNamespace>
     <AssemblyName>Orgodesk</AssemblyName>
     <!-- Semantic Versioning (MAJOR.MINOR.PATCH); see CHANGELOG.md and HQ/testing/PRODUCTION.md section 3. -->
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Product>Orgodesk</Product>
     <Company>CRC Solutions</Company>
     <Copyright>Copyright (c) 2026 CRC Solutions</Copyright>

@@ -7,7 +7,7 @@
 
 #define AppName "Orgodesk"
 #ifndef AppVersion
-  #define AppVersion "1.0.1"
+  #define AppVersion "1.1.0"
 #endif
 #ifndef Suffix
   #define Suffix ""

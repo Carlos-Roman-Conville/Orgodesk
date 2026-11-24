@@ -4,6 +4,15 @@ All notable changes to Orgodesk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [1.1.0] - unreleased
+
+What OrgoAI v1 adds to Orgodesk. Version bump proposed by release prep (scorecard 2a); the date is set on release.
+
+### Added
+- Command mode for OrgoAI and scripts: `Orgodesk.exe --orgo-command` lists groups, presets, snapshots and rules and previews layout, rename_group, remove_group and move_icon changes, always as a preview first, with data-safety checks for the existing layout (FC-55, FC-57).
+- The AI connection comes only with the Orgo suite bundle: its key, or the 30-day suite trial, then read-only (FC-56). The tray menu opens the key window.
+- An installer (Inno Setup, per user, no admin), replacing the zip (FC-61, FC-62).
+
 ## [1.0.1] - 2026-11-18
 
 Built from tag `v1.0.1`. Your Orgos, presets and settings carry over; install it over 1.0.0.
