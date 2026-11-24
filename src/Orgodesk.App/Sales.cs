@@ -23,12 +23,15 @@ internal static class Sales
     public static readonly SalesConfig Config = new(ProductId, BuyUrl);
 
     /// <summary>
-    /// Pro: Orgodesk has no Pro (App Premium) tier, and that is on purpose for now. Every feature, and every command
-    /// action, is part of the app; nothing answers needs_pro (Rex 2026-11-23: premium is decided app by app later,
-    /// CONTROLLER-HANDOFF "premium decided app by app"). When Rex decides one, it goes here as crc-appshell's SalesConfig.
+    /// Pro (App Premium): Orgodesk has no Pro tier and no Pro product yet, and says so here on purpose (Rex 2026-11-23: premium
+    /// is decided app by app later; crc-appshell D-13, CA-3 option b). Every feature, and every command action, is part of the
+    /// app; nothing answers needs_pro. The one gate is the kit's: <see cref="Premium"/>.<c>IsFreeForNow</c>. When Rex decides a
+    /// Pro, its Gumroad id goes into <see cref="ProProductId"/> and this flag goes.
     /// </summary>
-    // shortcut: until the kit flag lands (crc-appshell SalesConfig ProFreeForNow, branch pro-free-for-now); then use that one gate
-    public const bool ProIsFreeForNow = true;
+    public const bool ProFreeForNow = true;
+    public const string ProProductId = "";
+    public static readonly Crc.AppShell.Licensing.SalesConfig Premium =
+        new(ProProductId, "", ProductName: "Orgodesk Pro", DevBuild: DevBuild, ProFreeForNow: ProFreeForNow);
 
     /// <summary>
     /// The AI connection (suite PLAN.md amendment "AI only in the suite bundle"; crc-appshell DESIGN.md D-3 to D-9 and
@@ -46,5 +49,7 @@ internal static class Sales
     // D-9 as amended by D-11 (Rex 2026-11-23): a Release build stops here (CS0020, division by constant zero) while the
     // suite bundle's product id is empty, so a release never ships the AI connection free. Fill it in (Gumroad, in the kit).
     private const int ReleaseNeedsTheBundleId = 1 / (Crc.AppShell.Commands.OrgoSuite.BundleProductId == "" ? 0 : 1);
+    // D-12 (CA-3): the same for Pro: a Release build stops here unless Pro has a product id or says, in ProFreeForNow, that it is free.
+    private const int ReleaseNeedsTheProIdOrTheFreeLine = 1 / (ProProductId == "" && !ProFreeForNow ? 0 : 1);
 #endif
 }

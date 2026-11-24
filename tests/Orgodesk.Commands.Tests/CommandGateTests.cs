@@ -82,7 +82,8 @@ public class CommandGateTests : IDisposable
     {
         Assert.Equal("Orgodesk", Sales.Commands.ProductName);
         Assert.Equal(OrgoSuite.BundleProductId, Sales.Commands.BundleProductId);
-        Assert.True(Sales.ProIsFreeForNow);
+        Assert.True(Sales.Premium.IsFreeForNow);                                // Pro free for now, through the kit's one gate
+        Assert.False(Sales.Premium.IsOnSale);
 #if DEBUG
         Assert.True(Sales.DevBuild);                                             // a Debug build is a development build (D-11)
 #else

@@ -25,8 +25,7 @@ copies are `-c Debug` until then.
 **Added later the same day (FC-57):** `rename_group`, `remove_group`, `move_icon`, and the data-safety tests (v1.0.1 data, damaged,
 half-written, read-only, kill mid-apply with `tests/commands/kill-mid-apply.py`). **Not built:** pages through commands; pruning old
 "Before AI change" snapshots; the Qwen pass rate (no runner run for Orgodesk yet); (the VM round of the three new actions was run, FC-57).
-See FC-55, FC-57. `Sales.ProIsFreeForNow` is marked `shortcut: until the kit flag lands`: switch to crc-appshell's
-`ProFreeForNow` when the controller says it is on master.
+See FC-55, FC-57. Pro is free through the kit's `SalesConfig.ProFreeForNow` (`Sales.Premium`, kit 53c8e10); the Release build also stops unless Pro has an id or that flag.
 
 **Waiting on the controller (orgo-commands, not changed here):** undo for changes that are not files; the main lock
 for `ApplyOther`; the shown sentences passed to `ApplyOther`. FC-58 and the report to the controller.
