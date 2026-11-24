@@ -62,9 +62,12 @@ try {
     if ((G $appTree @('status', '--porcelain')).Count) { throw 'the worktree is not clean' }
 
     # Libraries the projects reference (libs\<name>, found by reading the project files, transitively), each a worktree beside the app.
+    # Which suite libraries a tree names: any libs\<name> or ..\<name> path segment whose <name> is a folder in <suite>\libs.
+    $libNames = @(Get-ChildItem (Join-Path $suite 'libs') -Directory | ForEach-Object Name)
     $queue = [System.Collections.Generic.Queue[string]]::new(); $seen = @{}
-    $scan = { param($root) Get-ChildItem $root -Recurse -Include *.csproj, *.props, *.targets -File -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' } | ForEach-Object { [regex]::Matches((Get-Content $_.FullName -Raw), 'libs\\([A-Za-z0-9.-]+)') | ForEach-Object { $_.Groups[1].Value } } | Sort-Object -Unique }
+    $scan = { param($root) $texts = Get-ChildItem $root -Recurse -Include *.csproj, *.props, *.targets -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' } | ForEach-Object { Get-Content $_.FullName -Raw }
+        foreach ($n in $libNames) { if ($texts | Where-Object { $_ -match ('[\\/]' + [regex]::Escape($n) + '(?![\w.-])') }) { $n } } }
     & $scan $appTree | ForEach-Object { if (-not $seen[$_]) { $seen[$_] = 1; $queue.Enqueue($_) } }
     while ($queue.Count) {
         $name = $queue.Dequeue(); $libGit = Join-Path $suite "libs\$name"
@@ -92,7 +95,7 @@ try {
 
     # Version: the exe project's <Version>, else Directory.Build.props, else the installer script.
     $version = $null
-    foreach ($f in @((Join-Path $appTree "$($Cfg.Project)\*.csproj"), (Join-Path $appTree 'Directory.Build.props'))) {
+    foreach ($f in @((Join-Path $appTree "$(($Cfg.Project -split ';')[0])\*.csproj"), (Join-Path $appTree 'Directory.Build.props'))) {
         $m = Get-ChildItem $f -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($m -and ((Get-Content $m.FullName -Raw) -match '<Version>([^<]+)</Version>')) { $version = $Matches[1]; break }
     }
@@ -104,11 +107,13 @@ try {
     Push-Location $appTree
     try {
         $pubOut = if ($Cfg.Kind -eq 'exezip') { 'release' } else { 'release\publish' }
-        $pub = @('publish', $Cfg.Project, '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '-p:PublishSingleFile=true',
-            '-p:IncludeNativeLibrariesForSelfExtract=true', '-o', $pubOut, '-nologo', '-v', 'q')
-        if ($Cfg.Kind -eq 'exezip') { $pub += '-p:DebugType=none' }
-        & $Dotnet @pub
-        if ($LASTEXITCODE) { throw "publish failed (exit $LASTEXITCODE)" }
+        foreach ($proj in ($Cfg.Project -split ';')) {   # OrgoAI publishes two exes (the cockpit and the MCP server) into one folder
+            $pub = @('publish', $proj, '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '-p:PublishSingleFile=true',
+                '-p:IncludeNativeLibrariesForSelfExtract=true', '-o', $pubOut, '-nologo', '-v', 'q')
+            if ($Cfg.Kind -eq 'exezip') { $pub += '-p:DebugType=none' }
+            & $Dotnet @pub
+            if ($LASTEXITCODE) { throw "publish of $proj failed (exit $LASTEXITCODE)" }
+        }
     } finally { Pop-Location }
 
     $complete = $true; $note = ''
