@@ -21,7 +21,13 @@
          spent before Main (Windows Defender reads the whole file), so a smaller file starts the first time sooner: 2.5 to 3.7 s
          against 3.5 to 5.5 s cold on the same VM, 0.1 s more on a warm start. Only applies to the single-file publish. -->
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <ApplicationIcon>Orgodesk.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- The app icon (crc-appshell UI.md 2.4.1, drawn in the kit's art/app-icons). ApplicationIcon reaches the exe,
+         taskbar and shortcuts; the embedded copy reaches every window, Alt-Tab and the tray (AppIcon). -->
+    <EmbeddedResource Include="Orgodesk.ico" LogicalName="Orgo.AppIcon.ico" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Orgodesk.Core\Orgodesk.Core.csproj" />
     <ProjectReference Include="..\Orgodesk.Windows\Orgodesk.Windows.csproj" />

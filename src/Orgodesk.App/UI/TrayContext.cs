@@ -49,7 +49,7 @@ public sealed class TrayContext : ApplicationContext
         _surface.SnapshotsRequested += (_, _) => ShowSnapshots();
         _surface.LayoutChanged += (_, _) => _settingsForm?.RefreshFenceList();
 
-        _icon = MakeTrayIcon();
+        _icon = Crc.AppShell.WinForms.AppIcon.Small() ?? (Icon)SystemIcons.Application.Clone();
         _tray = new NotifyIcon
         {
             Icon = _icon,
@@ -384,30 +384,6 @@ public sealed class TrayContext : ApplicationContext
             Log.Error("Could not open the AI connection window", ex);
             MessageBox.Show(DialogOwner.Get(), "Orgodesk could not read the AI connection's licence: " + ex.Message, "Orgodesk", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
-    }
-
-    private static Icon MakeTrayIcon()
-    {
-        using var bmp = new Bitmap(32, 32);
-        using (var g = Graphics.FromImage(bmp))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.Clear(Color.Transparent);
-            using var body = new SolidBrush(Color.FromArgb(230, 40, 40, 40));
-            using var title = new SolidBrush(Color.FromArgb(255, 70, 130, 220));
-            using var path = SurfaceRenderer.RoundedRect(new Rectangle(2, 4, 28, 24), 5);
-            g.FillPath(body, path);
-            g.FillRectangle(title, 2, 4, 28, 7);
-            using var dot = new SolidBrush(Color.FromArgb(255, 230, 230, 230));
-            for (int r = 0; r < 2; r++)
-                for (int c = 0; c < 3; c++)
-                    g.FillRectangle(dot, 6 + c * 8, 14 + r * 7, 5, 5);
-        }
-        var h = bmp.GetHicon();
-        using var tmp = Icon.FromHandle(h);
-        var icon = (Icon)tmp.Clone();
-        Windows.Shell.User32.DestroyIcon(h);
-        return icon;
     }
 
     protected override void Dispose(bool disposing)
