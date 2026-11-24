@@ -4,6 +4,9 @@ All notable changes to Orgodesk are listed here. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Fixed
+- Orgos on a monitor that is unplugged for a moment (a cable pulled out and back in) go back to that monitor when it returns, instead of staying piled on the main screen at the wrong size (FC-67).
+
 ## [1.1.0] - unreleased
 
 What OrgoAI v1 adds to Orgodesk. Version bump proposed by release prep (scorecard 2a); the date is set on release.

@@ -898,7 +898,7 @@ public sealed class DesktopSurface : Control
                 nb.Offset(p.X - _down.X, p.Y - _down.Y);
                 var m = _renderer.MetricsAt(new Point(nb.X + nb.Width / 2, nb.Y + nb.Height / 2));
                 nb = SnapFence(f, nb, m, FenceSnapper.Edges.All);
-                f.Bounds = FenceLayoutEngine.ClampBounds(nb, ScreenInfo.VirtualScreen, m);
+                f.MoveByHand(FenceLayoutEngine.ClampBounds(nb, ScreenInfo.VirtualScreen, m));
                 RequestRender();
                 return;
             }
@@ -914,7 +914,7 @@ public sealed class DesktopSurface : Control
                 if (_resizeEdges.HasFlag(Edge.Top)) t = Math.Min(t + dy, b - minH);
                 if (_resizeEdges.HasFlag(Edge.Bottom)) b = Math.Max(b + dy, t + minH);
                 var resized = SnapFence(f, Rectangle.FromLTRB(l, t, r, b), m, ToSnapEdges(_resizeEdges));
-                f.Bounds = FenceLayoutEngine.ClampBounds(resized, ScreenInfo.VirtualScreen, m);
+                f.MoveByHand(FenceLayoutEngine.ClampBounds(resized, ScreenInfo.VirtualScreen, m));
                 RequestRender();
                 return;
             }

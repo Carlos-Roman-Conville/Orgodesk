@@ -22,6 +22,19 @@ public sealed class Fence
     public string Title { get; set; } = "New Orgo";
     public Rectangle Bounds { get; set; } = new(100, 100, 300, 240);
 
+    /// <summary>
+    /// FC-67: where the fence was before a display change pulled it onto another screen (a monitor unplugged or asleep).
+    /// It goes back there when that space returns; null when the fence is where the person put it.
+    /// </summary>
+    public Rectangle? HomeBounds { get; set; }
+
+    /// <summary>The person moved or resized the fence: that is its place now, so it no longer goes back anywhere.</summary>
+    public void MoveByHand(Rectangle bounds)
+    {
+        Bounds = bounds;
+        HomeBounds = null;
+    }
+
     /// <summary>"#AARRGGBB" override for the body color, or null for the global setting.</summary>
     public string? Color { get; set; }
 

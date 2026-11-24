@@ -115,8 +115,16 @@ public static class LayoutReconciler
         {
             foreach (var f in page.Fences)
             {
+                // FC-67: back to where a display change took it from, once that space is on screen again.
+                if (f.HomeBounds is { } home && area.Contains(home))
+                {
+                    f.Bounds = home;
+                    f.HomeBounds = null;
+                    changed++;
+                    continue;
+                }
                 var nb = FenceLayoutEngine.ClampBounds(f.Bounds, area, m);
-                if (nb != f.Bounds) { f.Bounds = nb; changed++; }
+                if (nb != f.Bounds) { f.HomeBounds ??= f.Bounds; f.Bounds = nb; changed++; }
             }
             var outside = page.FreeItems.Where(kv => !area.Contains(FreeGrid.CellAt(kv.Value, m))).Select(kv => kv.Key).ToList();
             foreach (var key in outside)
@@ -181,6 +189,8 @@ public static class LayoutReconciler
                 var b = f.Bounds;
                 f.Bounds = FenceLayoutEngine.ClampBounds(new Rectangle(S(b.X, area.X), S(b.Y, area.Y),
                     (int)Math.Round(b.Width * ratio), (int)Math.Round(b.Height * ratio)), area, m);
+                if (f.HomeBounds is { } h)   // off screen by definition, so converted but not clamped
+                    f.HomeBounds = new Rectangle(S(h.X, area.X), S(h.Y, area.Y), (int)Math.Round(h.Width * ratio), (int)Math.Round(h.Height * ratio));
             }
             // Re-place free icons in reading order (column by column, like the grid fills) so earlier ones keep their spots.
             var items = page.FreeItems.OrderBy(kv => kv.Value.X).ThenBy(kv => kv.Value.Y).ToList();
