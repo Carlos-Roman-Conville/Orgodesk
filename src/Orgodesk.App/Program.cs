@@ -76,6 +76,33 @@ internal static class Program
         }
     }
 
+    /// <summary>
+    /// <c>--autostart on|off</c>, for the installer (FC-62): sets the Run-key entry for this exe and the matching
+    /// settings.json value in one step, with no window. Both, because at its next start the app makes the Run key follow
+    /// settings.json (so a Run key set alone would be undone). Exit code 0 done, 1 could not, 2 not "on" or "off".
+    /// </summary>
+    private static int SetAutostart(string? value)
+    {
+        if (value is null || !(value.Equals("on", StringComparison.OrdinalIgnoreCase) || value.Equals("off", StringComparison.OrdinalIgnoreCase))) return 2;
+        bool on = value.Equals("on", StringComparison.OrdinalIgnoreCase);
+        try
+        {
+            LayoutStore.MigrateLegacyRoot();
+            var store = new LayoutStore(LayoutStore.DefaultRoot);
+            var settings = store.LoadSettings();
+            settings.StartWithWindows = on;
+            store.SaveSettings(settings);
+            AutoStart.SetEnabled(on, Environment.ProcessPath ?? Application.ExecutablePath);
+            Log.Info("Start with Windows set " + (on ? "on" : "off") + " by the installer");
+            return 0;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            Log.Error("Could not set start with Windows", ex);
+            return 1;
+        }
+    }
+
     /// <summary>The app's version as 1.0.1 (the csproj's Version).</summary>
     private static string Version() => typeof(Program).Assembly.GetName().Version is { } v ? $"{v.Major}.{v.Minor}.{v.Build}" : "0.0.0";
 
@@ -83,6 +110,8 @@ internal static class Program
     private static int Main(string[] args)
     {
         if (Orgo.Commands.Stdio.Wanted(args)) return CommandMode(args);
+        int autostart = Array.FindIndex(args, x => x.Equals("--autostart", StringComparison.OrdinalIgnoreCase));
+        if (autostart >= 0) return SetAutostart(args.ElementAtOrDefault(autostart + 1));
         LayoutStore.MigrateLegacyRoot();
         if (args.Any(a => a.Equals("--restore", StringComparison.OrdinalIgnoreCase)))
         {

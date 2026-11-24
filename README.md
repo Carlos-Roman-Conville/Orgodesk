@@ -135,3 +135,7 @@ reusable for anything that wants to live on the Windows desktop.
 ## Known limits
 
 See [ISSUES.md](ISSUES.md).
+
+## Installer
+
+`build-installer.bat` builds `dist\Orgodesk-Setup-<version>.exe` (Inno Setup 6): per user, no admin prompt, a start-with-Windows choice, the legal folder, and an uninstall that keeps your layouts unless you say yes to deleting them. The Release build needs the suite bundle's product id (see HANDOFF.md); `build-installer.bat debug` is for test machines only. Details: ISSUES.md FC-62.

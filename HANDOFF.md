@@ -30,6 +30,8 @@ See FC-55, FC-57. Pro is free through the kit's `SalesConfig.ProFreeForNow` (`Sa
 **Waiting on the controller (orgo-commands, not changed here):** undo for changes that are not files; the main lock
 for `ApplyOther`; the shown sentences passed to `ApplyOther`. FC-58 and the report to the controller.
 
+**Installer (FC-62, 2026-11-23):** `build-installer.bat [debug]`, `installer\Orgodesk.iss`, `installer\make-legal-txt.ps1`; the app gained `--autostart on|off`. The Release installer cannot be built until `OrgoSuite.BundleProductId` is set (same stop as the exe). Inno Setup 6 is at `%LOCALAPPDATA%\Programs\Inno Setup 6`. The exe's own `--install` and `--uninstall` remain for zip users (release prep FC-61 decides zip or installer). VM round script and screenshots: `tests\installer\vm-round-2026-11-23`. The AppId GUID in the .iss must never change after a release.
+
 **Working safely:** never run the exe in command mode against the real `%APPDATA%\orgodesk` on Rex's PC; use
 `--data <throwaway folder>` (a Debug build writes no trial or registry). Command mode only signals an Orgodesk running
 with the same data folder. VM rounds lease a VM (`G:\VMs\orgo-tests\lease.ps1`), see orgo-suite `VM-TESTING.md`.
