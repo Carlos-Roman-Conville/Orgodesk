@@ -34,6 +34,8 @@ for `ApplyOther`; the shown sentences passed to `ApplyOther`. FC-58 and the repo
 
 **Download decision (FC-61, release prep, row on branch v1-rc): the installer is the one v1 download; no zip is listed.** The controller's call (2026-11-23), open to Rex's change: one way in means one set of support answers, and the installer keeps layouts and handles upgrades. `release.bat` (the zip build) stays in the repo, unused for v1. Record it in FC-61 itself when v1-rc is merged.
 
+**FC-64 (release prep, row on branch v1-rc) and FC-66 (the finding, here):** a cold first start of the published exe spends 2.5 to 5.6 s before `Main` (Defender reading the file); command mode itself is 0.15 s. The exe is now published compressed (47 MB). Set `ORGODESK_CMD_TRACE=<file>` to get stage lines from command mode. Merge note: v1-rc numbers release prep's rows FC-64 and FC-65 and this repo's installer rows FC-62 and FC-63; fold FC-66 under FC-64 when v1-rc merges.
+
 **Working safely:** never run the exe in command mode against the real `%APPDATA%\orgodesk` on Rex's PC; use
 `--data <throwaway folder>` (a Debug build writes no trial or registry). Command mode only signals an Orgodesk running
 with the same data folder. VM rounds lease a VM (`G:\VMs\orgo-tests\lease.ps1`), see orgo-suite `VM-TESTING.md`.
