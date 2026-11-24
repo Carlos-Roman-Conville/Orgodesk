@@ -32,6 +32,8 @@ for `ApplyOther`; the shown sentences passed to `ApplyOther`. FC-58 and the repo
 
 **Installer (FC-62, 2026-11-23):** `build-installer.bat [debug]`, `installer\Orgodesk.iss`, `installer\make-legal-txt.ps1`; the app gained `--autostart on|off`. The Release installer cannot be built until `OrgoSuite.BundleProductId` is set (same stop as the exe). Inno Setup 6 is at `%LOCALAPPDATA%\Programs\Inno Setup 6`. The exe's own `--install` and `--uninstall` remain for zip users (release prep FC-61 decides zip or installer). VM round script and screenshots: `tests\installer\vm-round-2026-11-23`. The AppId GUID in the .iss must never change after a release.
 
+**Download decision (FC-61, release prep, row on branch v1-rc): the installer is the one v1 download; no zip is listed.** The controller's call (2026-11-23), open to Rex's change: one way in means one set of support answers, and the installer keeps layouts and handles upgrades. `release.bat` (the zip build) stays in the repo, unused for v1. Record it in FC-61 itself when v1-rc is merged.
+
 **Working safely:** never run the exe in command mode against the real `%APPDATA%\orgodesk` on Rex's PC; use
 `--data <throwaway folder>` (a Debug build writes no trial or registry). Command mode only signals an Orgodesk running
 with the same data folder. VM rounds lease a VM (`G:\VMs\orgo-tests\lease.ps1`), see orgo-suite `VM-TESTING.md`.
