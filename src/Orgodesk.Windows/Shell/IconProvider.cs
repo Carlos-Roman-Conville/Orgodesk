@@ -63,12 +63,12 @@ public sealed class IconProvider : IDisposable
         var bmp = FromImageList(listId, iconIndex, flags);
         if (bmp == null) return null;
 
-        // Jumbo entries for icons without a 256px image come back as a small picture on a big canvas.
-        if (listId == Const.SHIL_JUMBO && LooksSmall(bmp, 64))
+        // Jumbo entries for icons without a 256px image come back as a small picture on a big canvas: cut it out.
+        if (listId == Const.SHIL_JUMBO && SmallPictureArea(bmp) is { } frame)
         {
+            var cut = bmp.Clone(frame, PixelFormat.Format32bppArgb);
             bmp.Dispose();
-            bmp = FromImageList(Const.SHIL_EXTRALARGE, iconIndex, flags);
-            if (bmp == null) return null;
+            bmp = cut;
         }
 
         if (bmp.Width == size && bmp.Height == size) return bmp;
@@ -104,10 +104,17 @@ public sealed class IconProvider : IDisposable
         }
     }
 
-    /// <summary>True if every pixel outside the top-left square of <paramref name="limit"/> px is transparent.</summary>
-    private static bool LooksSmall(Bitmap bmp, int limit)
+    /// <summary>Icon frame sizes Windows may place in the corner of a jumbo canvas (72 is 48 at 150%).</summary>
+    private static readonly int[] FrameSizes = { 16, 20, 24, 32, 40, 48, 64, 72, 80, 96, 128 };
+
+    /// <summary>
+    /// FC-68: for a jumbo (256 px) bitmap that only holds a smaller picture in its top-left corner, the square to cut
+    /// out (the smallest frame size that holds every visible pixel); null for a real 256 px picture or a blank one.
+    /// The old check looked only 64 px in, so a 72 px picture at 150% scaling was shrunk with its blank canvas.
+    /// </summary>
+    public static Rectangle? SmallPictureArea(Bitmap bmp)
     {
-        if (bmp.Width <= limit) return true;
+        int extent = 0;
         var data = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
         try
         {
@@ -117,10 +124,7 @@ public sealed class IconProvider : IDisposable
                 {
                     byte* row = (byte*)data.Scan0 + y * data.Stride;
                     for (int x = 0; x < bmp.Width; x++)
-                    {
-                        if (x < limit && y < limit) continue;
-                        if (row[x * 4 + 3] != 0) return false;
-                    }
+                        if (row[x * 4 + 3] != 0) extent = Math.Max(extent, Math.Max(x, y) + 1);
                 }
             }
         }
@@ -128,6 +132,9 @@ public sealed class IconProvider : IDisposable
         {
             bmp.UnlockBits(data);
         }
-        return true;
+        if (extent == 0) return null;
+        foreach (var size in FrameSizes)
+            if (size >= extent && size < bmp.Width && size < bmp.Height) return new Rectangle(0, 0, size, size);
+        return null;
     }
 }
