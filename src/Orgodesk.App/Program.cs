@@ -27,12 +27,29 @@ internal static class Program
     /// lock, which the running app takes for its own saves, and the app is told to show them. <c>--data</c> points it at
     /// another data folder (tests, VM copies); the running app always uses the default one.
     /// </summary>
+    /// <summary>
+    /// Stage markers for finding where command mode waits (FC-64): when the environment variable ORGODESK_CMD_TRACE names a
+    /// file, each stage appends one line (time, process id, stage). Nothing happens when it is not set.
+    /// </summary>
+    internal static void Trace(string stage)
+    {
+        try
+        {
+            if (Environment.GetEnvironmentVariable("ORGODESK_CMD_TRACE") is { Length: > 0 } file)
+                File.AppendAllText(file, $"{DateTime.Now:HH:mm:ss.fff} pid {Environment.ProcessId} {stage}{Environment.NewLine}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException) { }
+    }
+
     private static int CommandMode(string[] args)
     {
+        Trace("command mode: start");
         string data = LayoutStore.DefaultRoot;
         for (int i = 0; i < args.Length - 1; i++)
             if (args[i] == "--data") data = Path.GetFullPath(args[i + 1]);
-        return CommandMode(data, CommandsName, Crc.AppShell.Commands.CommandLicense.Load(Sales.Commands));
+        var license = Crc.AppShell.Commands.CommandLicense.Load(Sales.Commands);
+        Trace("licence loaded");
+        return CommandMode(data, CommandsName, license);
     }
 
     /// <summary>Command mode against a data folder and a lock name of the caller's (tests pass their own of both).</summary>
@@ -40,6 +57,7 @@ internal static class Program
         TextReader? input = null, TextWriter? output = null)
     {
         var answer = license.CheckAsync().GetAwaiter().GetResult();   // a due key check may wait up to 5 s
+        Trace("licence checked: " + answer.AccessName);
         var store = new LayoutStore(data);
         var tool = new Orgodesk.Commands.DeskTool(new Orgodesk.Commands.SharedLayout(store, lockName), new Orgodesk.Commands.DeskSignals(data), Version())
         {
@@ -47,8 +65,11 @@ internal static class Program
             Desktop = () => ReadDesktop(store),
             KnownFolder = Windows.Shell.KnownFolders.Path,
         };
-        return Orgo.Commands.Stdio.Serve(tool, answer.Refuse, input, output,
+        Trace("tool ready; serving");
+        var code = Orgo.Commands.Stdio.Serve(tool, answer.Refuse, input, output,
             new Orgo.Commands.AiConnection(answer.AccessName, answer.Why, answer.TrialDaysLeft));
+        Trace("answered, exit " + code);
+        return code;
     }
 
     /// <summary>What the desktop shows now, as the app reads it (items already placed in a group are kept); null when
@@ -109,6 +130,7 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        Trace("main");
         if (Orgo.Commands.Stdio.Wanted(args)) return CommandMode(args);
         int autostart = Array.FindIndex(args, x => x.Equals("--autostart", StringComparison.OrdinalIgnoreCase));
         if (autostart >= 0) return SetAutostart(args.ElementAtOrDefault(autostart + 1));

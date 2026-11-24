@@ -17,6 +17,10 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- FC-64: the single-file exe is 103 MB uncompressed and 47 MB compressed. The first start of an exe the PC has not seen is
+         spent before Main (Windows Defender reads the whole file), so a smaller file starts the first time sooner: 2.5 to 3.7 s
+         against 3.5 to 5.5 s cold on the same VM, 0.1 s more on a warm start. Only applies to the single-file publish. -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Orgodesk.Core\Orgodesk.Core.csproj" />
