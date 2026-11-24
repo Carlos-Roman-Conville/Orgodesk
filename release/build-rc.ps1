@@ -30,8 +30,11 @@ $Cfg = @{
     Display  = 'Orgodesk'        # file name prefix
     RepoPath = 'apps\orgodesk'       # where the repo sits under the suite root (apps\orgodupe, or orgoai)
     Project  = 'src\Orgodesk.App'        # the exe project, relative to the repo
-    Iss      = ''            # Inno Setup script relative to the repo; '' = this repo ships no installer
-    Kind     = 'exezip'           # installer | exezip (Orgodesk: exe + docs zip) | exe
+    Iss      = 'installer\Orgodesk.iss'            # Inno Setup script relative to the repo; '' = this repo ships no installer
+    Kind     = 'installer'           # installer | exezip (an exe and its docs in a zip, for a repo with no installer) | exe
+    Pre      = 'installer\make-legal-txt.ps1'            # a script the repo's own build-installer runs before publishing (Orgodesk: makes the legal text files); '' = none
+    IssDefs  = '/DAppVersion={version}'        # extra Inno defines; {version} is replaced (Orgodesk's .iss takes /DAppVersion)
+    PubExtra = '-p:DebugType=none'       # extra publish arguments, space separated (Orgodesk: -p:DebugType=none)
 }
 # ----------------------------------------------------------------------------------------------------------------
 
@@ -63,22 +66,23 @@ try {
 
     # Libraries the projects reference (libs\<name>, found by reading the project files, transitively), each a worktree beside the app.
     # Which suite libraries a tree names: any libs\<name> or ..\<name> path segment whose <name> is a folder in <suite>\libs.
-    $libNames = @(Get-ChildItem (Join-Path $suite 'libs') -Directory | ForEach-Object Name)
+    # OrgoAI itself (the suite's orgoai folder, a repo of its own) is also named by Orgodupe (Bit, OrgoAI.Companion): a sibling worktree at <work>\orgoai.
+    $libNames = @(Get-ChildItem (Join-Path $suite 'libs') -Directory | ForEach-Object Name) + @('orgoai' | Where-Object { $_ -ne $Cfg.App })
     $queue = [System.Collections.Generic.Queue[string]]::new(); $seen = @{}
     $scan = { param($root) $texts = Get-ChildItem $root -Recurse -Include *.csproj, *.props, *.targets -File -ErrorAction SilentlyContinue |
         Where-Object { $_.FullName -notmatch '\\(obj|bin)\\' } | ForEach-Object { Get-Content $_.FullName -Raw }
         foreach ($n in $libNames) { if ($texts | Where-Object { $_ -match ('[\\/]' + [regex]::Escape($n) + '(?![\w.-])') }) { $n } } }
     & $scan $appTree | ForEach-Object { if (-not $seen[$_]) { $seen[$_] = 1; $queue.Enqueue($_) } }
     while ($queue.Count) {
-        $name = $queue.Dequeue(); $libGit = Join-Path $suite "libs\$name"
-        if (-not (Test-Path (Join-Path $libGit '.git'))) { throw "libs\$name is not a git checkout under $suite" }
+        $name = $queue.Dequeue(); $rel = if ($name -eq 'orgoai') { 'orgoai' } else { "libs\$name" }; $libGit = Join-Path $suite $rel
+        if (-not (Test-Path (Join-Path $libGit '.git'))) { throw "$rel is not a git checkout under $suite" }
         try { G $libGit @('fetch', '--quiet', 'origin') | Out-Null } catch { }
         $rev = $LibCommit[$name]
         if (-not $rev) { $rev = foreach ($c in 'origin/HEAD', 'origin/master', 'origin/main') { try { G $libGit @('rev-parse', '--verify', "$c^{commit}") | Select-Object -First 1; break } catch { } } }
         $libSha = (G $libGit @('rev-parse', '--verify', "$rev^{commit}")) | Select-Object -First 1
-        AddTree $libGit (Join-Path $work "libs\$name") $libSha
+        AddTree $libGit (Join-Path $work $rel) $libSha
         $libShas[$name] = $libSha
-        & $scan (Join-Path $work "libs\$name") | ForEach-Object { if (-not $seen[$_]) { $seen[$_] = 1; $queue.Enqueue($_) } }
+        & $scan (Join-Path $work $rel) | ForEach-Object { if (-not $seen[$_]) { $seen[$_] = 1; $queue.Enqueue($_) } }
     }
 
     # The placeholder bundle id: only in the throwaway kit copy, only when the committed id is empty.
@@ -107,10 +111,12 @@ try {
     Push-Location $appTree
     try {
         $pubOut = if ($Cfg.Kind -eq 'exezip') { 'release' } else { 'release\publish' }
+        if ($Cfg.Pre) { & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $appTree $Cfg.Pre); if ($LASTEXITCODE) { throw "$($Cfg.Pre) failed (exit $LASTEXITCODE)" } }
         foreach ($proj in ($Cfg.Project -split ';')) {   # OrgoAI publishes two exes (the cockpit and the MCP server) into one folder
             $pub = @('publish', $proj, '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true', '-p:PublishSingleFile=true',
                 '-p:IncludeNativeLibrariesForSelfExtract=true', '-o', $pubOut, '-nologo', '-v', 'q')
             if ($Cfg.Kind -eq 'exezip') { $pub += '-p:DebugType=none' }
+            if ($Cfg.PubExtra) { $pub += ($Cfg.PubExtra -split ' ') }
             & $Dotnet @pub
             if ($LASTEXITCODE) { throw "publish of $proj failed (exit $LASTEXITCODE)" }
         }
@@ -122,7 +128,8 @@ try {
         $iscc = @("$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe", "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
         if (-not $iscc) { throw 'Inno Setup 6 was not found' }
         $base = "$($Cfg.Display)-Setup-$version-$tag"
-        & $iscc '/Q' "/O$out" "/F$base" $issPath
+        $defs = @(); if ($Cfg.IssDefs) { $defs = @(($Cfg.IssDefs -replace '\{version\}', $version) -split ' ') }
+        & $iscc '/Q' @defs "/O$out" "/F$base" $issPath
         if ($LASTEXITCODE) { throw "installer build failed (exit $LASTEXITCODE)" }
         $files += Join-Path $out "$base.exe"
     } elseif ($Cfg.Kind -eq 'exezip') {
