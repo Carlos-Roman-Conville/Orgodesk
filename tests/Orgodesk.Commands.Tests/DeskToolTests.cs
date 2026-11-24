@@ -20,7 +20,7 @@ public class DeskToolTests
         using var d = new Desk();
         var rules = new ContractRules
         {
-            NoInjection = new[] { "presets", "snapshots", "rules", "new_group", "add_rule", "quick_hide", "preset", "save_preset", "portal", "roll_up", "snapshot_save", "snapshot_restore" },
+            NoInjection = new[] { "rename_group", "presets", "snapshots", "rules", "new_group", "add_rule", "quick_hide", "preset", "save_preset", "portal", "roll_up", "snapshot_save", "snapshot_restore" },
         };
         Assert.Empty(ContractCheck.Problems(d.Tool.Info, Path.Combine(RepoRoot(), "tests", "commands", "requests.jsonl"), rules));
     }

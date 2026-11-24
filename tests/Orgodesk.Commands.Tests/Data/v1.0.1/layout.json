@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "pages": [
+    {
+      "id": "d668d6706c824a6ba3fd7d61e4bf07fb",
+      "name": "Page 1",
+      "fences": [
+        {
+          "id": "f1",
+          "title": "Projects",
+          "bounds": {
+            "x": 400,
+            "y": 100,
+            "w": 300,
+            "h": 240
+          },
+          "color": "#8C112233",
+          "titleColor": null,
+          "rolledUp": false,
+          "autoRollUp": false,
+          "portalPath": null,
+          "sort": "Name",
+          "items": [
+            "C:\\Users\\tester\\Desktop\\plan.docx",
+            "C:\\Users\\tester\\Desktop\\Chrome.lnk"
+          ]
+        },
+        {
+          "id": "f2",
+          "title": "Games",
+          "bounds": {
+            "x": 800,
+            "y": 100,
+            "w": 300,
+            "h": 240
+          },
+          "color": null,
+          "titleColor": null,
+          "rolledUp": true,
+          "autoRollUp": true,
+          "portalPath": null,
+          "sort": "Manual",
+          "items": []
+        },
+        {
+          "id": "f3",
+          "title": "Downloads",
+          "bounds": {
+            "x": 100,
+            "y": 500,
+            "w": 300,
+            "h": 240
+          },
+          "color": null,
+          "titleColor": null,
+          "rolledUp": false,
+          "autoRollUp": false,
+          "portalPath": "C:\\Users\\tester\\Downloads",
+          "sort": "Manual",
+          "items": []
+        }
+      ],
+      "freeItems": {
+        "C:\\Users\\tester\\Desktop\\notes.txt": {
+          "x": 0,
+          "y": 0
+        },
+        "::{645FF040-5081-101B-9F08-00AA002F954E}": {
+          "x": 0,
+          "y": 92
+        }
+      }
+    },
+    {
+      "id": "37dcf1c16abb41e49b43f1ab4b9b13f0",
+      "name": "Page 2",
+      "fences": [
+        {
+          "id": "f4",
+          "title": "Second",
+          "bounds": {
+            "x": 50,
+            "y": 50,
+            "w": 300,
+            "h": 240
+          },
+          "color": null,
+          "titleColor": null,
+          "rolledUp": false,
+          "autoRollUp": false,
+          "portalPath": null,
+          "sort": "Manual",
+          "items": []
+        }
+      ],
+      "freeItems": {}
+    }
+  ],
+  "activePageIndex": 0,
+  "rules": [
+    {
+      "id": "r1",
+      "name": "Docs",
+      "enabled": true,
+      "kind": "Extension",
+      "pattern": "docx;pdf",
+      "itemType": "Any",
+      "targetFenceId": "f1"
+    },
+    {
+      "id": "r2",
+      "name": "Shortcuts",
+      "enabled": true,
+      "kind": "ItemType",
+      "pattern": "",
+      "itemType": "Shortcut",
+      "targetFenceId": "f1"
+    }
+  ],
+  "presets": [
+    {
+      "id": "d5fe3b46df4d431fa7d23de107b236f5",
+      "name": "Work",
+      "fences": [
+        {
+          "id": "f1",
+          "title": "Projects",
+          "bounds": {
+            "x": 400,
+            "y": 100,
+            "w": 300,
+            "h": 240
+          },
+          "color": "#8C112233",
+          "titleColor": null,
+          "rolledUp": false,
+          "autoRollUp": false,
+          "portalPath": null,
+          "sort": "Name",
+          "items": [
+            "C:\\Users\\tester\\Desktop\\plan.docx",
+            "C:\\Users\\tester\\Desktop\\Chrome.lnk"
+          ]
+        },
+        {
+          "id": "f2",
+          "title": "Games",
+          "bounds": {
+            "x": 800,
+            "y": 100,
+            "w": 300,
+            "h": 240
+          },
+          "color": null,
+          "titleColor": null,
+          "rolledUp": true,
+          "autoRollUp": true,
+          "portalPath": null,
+          "sort": "Manual",
+          "items": []
+        },
+        {
+          "id": "f3",
+          "title": "Downloads",
+          "bounds": {
+            "x": 100,
+            "y": 500,
+            "w": 300,
+            "h": 240
+          },
+          "color": null,
+          "titleColor": null,
+          "rolledUp": false,
+          "autoRollUp": false,
+          "portalPath": "C:\\Users\\tester\\Downloads",
+          "sort": "Manual",
+          "items": []
+        }
+      ],
+      "freeItems": {
+        "C:\\Users\\tester\\Desktop\\notes.txt": {
+          "x": 0,
+          "y": 0
+        },
+        "::{645FF040-5081-101B-9F08-00AA002F954E}": {
+          "x": 0,
+          "y": 92
+        }
+      }
+    }
+  ],
+  "activePresetId": "d5fe3b46df4d431fa7d23de107b236f5",
+  "gridScale": 1.5
+}

@@ -17,4 +17,7 @@
     <ProjectReference Include="..\..\src\Orgodesk.Commands\Orgodesk.Commands.csproj" />
     <ProjectReference Include="..\..\src\Orgodesk.App\Orgodesk.App.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

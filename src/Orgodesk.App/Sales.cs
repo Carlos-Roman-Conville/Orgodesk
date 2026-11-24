@@ -27,6 +27,7 @@ internal static class Sales
     /// action, is part of the app; nothing answers needs_pro (Rex 2026-11-23: premium is decided app by app later,
     /// CONTROLLER-HANDOFF "premium decided app by app"). When Rex decides one, it goes here as crc-appshell's SalesConfig.
     /// </summary>
+    // shortcut: until the kit flag lands (crc-appshell SalesConfig ProFreeForNow, branch pro-free-for-now); then use that one gate
     public const bool ProIsFreeForNow = true;
 
     /// <summary>

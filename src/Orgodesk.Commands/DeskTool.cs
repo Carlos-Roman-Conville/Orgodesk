@@ -161,6 +161,34 @@ public sealed class DeskTool : IOrgoTool
             Returns = "A plan with an id: the group and its new state.",
             Example = "preview(roll_up, group=\"Projects\")",
         },
+        new ActionInfo("rename_group", "preview", "Renames a desktop group.",
+            new[] { Group("Its title changes; its icons and rules stay."), new ArgInfo("name", "string", true, "The new title; no other group may have it.") { Example = "Work 2026" } })
+        {
+            UseWhen = "The person wants a desktop group, box or fence to have another name.",
+            NotFor = "Renaming a file or folder: nothing yet. A new group: new_group.",
+            Returns = "A plan with an id: the old and new title.",
+            Example = "preview(rename_group, group=\"Games\", name=\"Play\")",
+        },
+        new ActionInfo("remove_group", "preview", "Removes a desktop group; its icons go back onto the desktop.",
+            new[] { Group("Its icons stay on the desktop; sort rules aimed at it are removed too.") })
+        {
+            UseWhen = "The person wants a desktop group, box or fence gone.",
+            NotFor = "Deleting files or folders: nothing yet. Hiding all icons: quick_hide. Folding it up: roll_up.",
+            Returns = "A plan with an id: the icons that go back and the rules that go. No file is touched.",
+            Example = "preview(remove_group, group=\"Games\")",
+        },
+        new ActionInfo("move_icon", "preview", "Moves one desktop icon into a group, or back onto the free desktop.",
+            new[]
+            {
+                new ArgInfo("icon", "string", true, "The icon's name as the desktop shows it: with or without its ending, as list groups shows it.") { Example = "plan.docx" },
+                new ArgInfo("to", "string", true, "The group's name, or the word desktop for the free desktop.") { Example = "Projects" },
+            })
+        {
+            UseWhen = "The person wants one icon in a certain group, or out of its group.",
+            NotFor = "Moving the file to another folder: orgofolder. Many icons at once: add_rule then sort_icons.",
+            Returns = "A plan with an id: the icon, where it is now, where it goes. The file stays where it is.",
+            Example = "preview(move_icon, icon=\"plan.docx\", to=\"Projects\")",
+        },
         new ActionInfo("snapshot_save", "preview", "Saves a named snapshot of the whole desktop layout.",
             new[] { new ArgInfo("name", "string", true, "The snapshot's name; it must be new.") { Example = "Before" } })
         {
@@ -257,14 +285,14 @@ public sealed class DeskTool : IOrgoTool
         if (change.After != null)
         {
             var before = BeforeName();
-            _shared.Store.SaveSnapshot(before, layout);
-            _shared.Store.SaveLayout(change.After);
+            Saving(() => _shared.Store.SaveSnapshot(before, layout));
+            Saving(() => _shared.Store.SaveLayout(change.After));
             result["undo"] = "preview(snapshot_restore, name=\"" + before + "\")";
             result["shownNow"] = _signals.Send(_signals.Reload);        // false: Orgodesk is not running; it shows the change at its next start
         }
         if (change.SnapshotAs != null)
         {
-            _shared.Store.SaveSnapshot(change.SnapshotAs, layout);
+            Saving(() => _shared.Store.SaveSnapshot(change.SnapshotAs, layout));
             result["snapshot"] = change.SnapshotAs;
         }
         if (change.QuickHide is bool hide)
@@ -274,6 +302,17 @@ public sealed class DeskTool : IOrgoTool
             result["undo"] = hide ? "preview(quick_hide, show=true)" : "preview(quick_hide)";
         }
         return result;
+    }
+
+    /// <summary>A write that cannot be made (read-only file, disk full, antivirus) is a plain refusal: the layout is as it
+    /// was (the store writes whole files, never half), and no path or exception text reaches the answer.</summary>
+    private static void Saving(Action write)
+    {
+        try { write(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new CommandException(Codes.Failed, "Orgodesk could not save its layout files (is the folder read-only or locked?), so the desktop layout was not changed");
+        }
     }
 
     private static CommandException Busy() =>
@@ -292,6 +331,9 @@ public sealed class DeskTool : IOrgoTool
         "save_preset" => SavePreset(layout, Name(args, "name")),
         "portal" => Portal(layout, Folder(Str(args, "folder")!), Str(args, "group") is string g ? FindGroup(layout, g) : null),
         "roll_up" => RollUp(layout, FindGroup(layout, Str(args, "group")!), Bool(args, "open")),
+        "rename_group" => RenameGroup(layout, FindGroup(layout, Str(args, "group")!), Name(args, "name")),
+        "remove_group" => RemoveGroup(layout, FindGroup(layout, Str(args, "group")!)),
+        "move_icon" => MoveIcon(layout, Str(args, "icon")!, Str(args, "to")!),
         "snapshot_save" => SnapshotSave(layout, Name(args, "name")),
         "snapshot_restore" => SnapshotRestore(layout, Str(args, "name")!),
         _ => throw new CommandException(Codes.UnknownAction, "Orgodesk has no preview action \"" + action + "\""),
@@ -299,8 +341,72 @@ public sealed class DeskTool : IOrgoTool
 
     private static Change Layouts(Layout after, params string[] says) => new(says.Append(CanUndo).ToList(), after);
 
+    /// <summary>"desktop" names the free desktop in move_icon, so no group may have that name.</summary>
+    private static void NotReserved(string name)
+    {
+        if (Same(name, FreeDesktop)) throw new CommandException(Codes.BadArgs, "\"" + FreeDesktop + "\" means the free desktop in move_icon, so no group can have that name; pick another");
+    }
+    private const string FreeDesktop = "desktop";
+
+    private Change RenameGroup(Layout layout, Fence group, string name)
+    {
+        NotReserved(name);
+        if (layout.AllFences.FirstOrDefault(f => f.Id != group.Id && Same(f.Title, name)) is { } taken)
+            throw new CommandException(Codes.Refused, "A group called \"" + taken.Title + "\" already exists; pick another name");
+        if (group.Title == name) throw new CommandException(Codes.Refused, "The group is already called \"" + name + "\"");
+        var after = layout.Clone();
+        after.FindFence(group.Id)!.Title = name;
+        return Layouts(after, "Renames the group \"" + group.Title + "\" to \"" + name + "\"; its icons and rules stay.");
+    }
+
+    private Change RemoveGroup(Layout layout, Fence group)
+    {
+        var after = layout.Clone();
+        var page = after.PageOfFence(group.Id)!;
+        LayoutReconciler.ReleaseFence(page, page.FindFence(group.Id)!, WorkArea(), Metrics(after));
+        int rules = after.Rules.RemoveAll(r => r.TargetFenceId == group.Id);
+        var says = new List<string> { "Removes the group \"" + group.Title + "\"" + (group.IsPortal ? " (it showed " + group.PortalPath + ")" : "") + "." };
+        if (group.Items.Count > 0) says.Add("Its " + Count(group.Items.Count, "icon") + " go back onto the desktop: " + Names(group.Items) + ".");
+        if (rules > 0) says.Add("Its " + Count(rules, "sort rule") + " go with it.");
+        says.Add("No file is deleted or moved.");
+        return Layouts(after, says.ToArray());
+    }
+
+    private Change MoveIcon(Layout layout, string icon, string to)
+    {
+        icon = icon.Trim();
+        if (icon.Length == 0 || Unsafe(icon)) throw new CommandException(Codes.BadArgs, "icon is the name of an icon on the desktop, such as plan.docx");
+        var page = layout.ActivePage;
+        var keys = page.FreeItems.Keys.Concat(page.Fences.Where(f => !f.IsPortal).SelectMany(f => f.Items)).Where(k => !k.StartsWith("::", StringComparison.Ordinal)).ToList();
+        var hits = keys.Where(k => Same(Path.GetFileName(k), icon)).ToList();
+        if (hits.Count == 0) hits = keys.Where(k => Same(Path.GetFileNameWithoutExtension(k), icon)).ToList();
+        if (hits.Count == 0) throw new CommandException(Codes.NotFound, "There is no icon called \"" + icon + "\" on the desktop page; list groups shows the icons in groups");
+        if (hits.Count > 1) throw new CommandException(Codes.BadArgs, Count(hits.Count, "icon") + " match \"" + icon + "\" (" + Names(hits) + "); give the whole name with its ending");
+        string key = hits[0];
+        var from = page.FenceContaining(key);
+        to = to.Trim();
+        var after = layout.Clone();
+        var apage = after.ActivePage;
+        string name = ItemName(key);
+        if (Same(to, FreeDesktop))
+        {
+            if (from == null) throw new CommandException(Codes.Refused, "\"" + name + "\" is already on the free desktop");
+            apage.Remove(key);
+            apage.FreeItems[key] = LayoutReconciler.NextFreeSlot(apage, WorkArea(), Metrics(after));
+            return Layouts(after, "Takes \"" + name + "\" out of the group \"" + from.Title + "\" and puts it back on the free desktop. The file stays where it is.");
+        }
+        var target = FindGroup(layout, to);
+        if (target.IsPortal) throw new CommandException(Codes.Refused, "The group \"" + target.Title + "\" shows a folder, so icons cannot be put into it");
+        if (page.FindFence(target.Id) == null) throw new CommandException(Codes.Refused, "The group \"" + target.Title + "\" is on another page than the icon");
+        if (from?.Id == target.Id) throw new CommandException(Codes.Refused, "\"" + name + "\" is already in \"" + target.Title + "\"");
+        apage.Remove(key);
+        apage.FindFence(target.Id)!.Items.Add(key);
+        return Layouts(after, "Moves \"" + name + "\" " + (from == null ? "from the free desktop" : "out of \"" + from.Title + "\"") + " into the group \"" + target.Title + "\". The file stays where it is.");
+    }
+
     private Change NewGroup(Layout layout, string name)
     {
+        NotReserved(name);
         if (layout.AllFences.FirstOrDefault(f => Same(f.Title, name)) is { } taken)
             throw new CommandException(Codes.Refused, "A group called \"" + taken.Title + "\" already exists; pick another name, or use it with add_rule or portal");
         var after = layout.Clone();

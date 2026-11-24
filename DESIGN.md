@@ -23,7 +23,7 @@ one real use from start to finish (for example: "you drop a file in Downloads â†
   input. It calls on no other tool.
 - **Its commands for OrgoAI** (`Orgodesk.exe --orgo-command`, tool name `orgodesk`): list `groups`, `presets`,
   `snapshots`, `rules`; status (app running, page, counts, layout ok or damaged); preview `new_group`, `add_rule`,
-  `sort_icons`, `quick_hide`, `preset`, `save_preset`, `portal`, `roll_up`, `snapshot_save`, `snapshot_restore`.
+  `sort_icons`, `quick_hide`, `preset`, `save_preset`, `portal`, `roll_up`, `rename_group`, `remove_group`, `move_icon`, `snapshot_save`, `snapshot_restore`.
   Every preview is a described change (orgo-commands OC-10). Apply makes it under the shared lock and keeps the layout
   as it was as a snapshot first; the answer names the undo (`preview(snapshot_restore, name="Before AI change ...")`,
   or `quick_hide show=true`). Usage text is in `DeskTool.Info`; test requests in `tests/commands/requests.jsonl`.
