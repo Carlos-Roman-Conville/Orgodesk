@@ -13,6 +13,13 @@ section 7, release state in [TESTING.md](TESTING.md).
 - **Not seen on screen (Rex's checks):** FC-67 (Orgos and free icons go back to a monitor that returns): Rex pulls his HDMI cable out and back in with 1.1.0 running. FC-68 (icons without a 256 px image drawn tiny at 150%): Rex's screenshot after the install showed Aseprite, darktable, Tiefsee and Tiled full size, but no one has checked it against a test. FC-69 (switch_preset keeps groups on a second monitor): tested only.
 - **Open question to Rex (asked, not answered), text readability:** (1) names are drawn white on every Orgo, so they are hard to read on a light Orgo (Rex's global Orgo colour is `#8CC0C0C0`; his new "Orgo-Suite" Orgo uses it); pick dark or light text by the Orgo's colour. (2) Names get one line and are cut at about 9 characters, where Explorer gives two. (3) The Label size setting (Settings, 6 to 24 pt) already exists, but cells do not grow with it, so bigger text is cut sooner; cells should fit two lines at the chosen size. Wait for his yes before building; it changes how every Orgo looks.
 
+## 2026-11-25: both HDMI cables out, Orgos stuck again (FC-71)
+
+- **Cause:** with both monitors gone Windows reported a 1920x1080 screen at 100%, so `Rescale` ran too; it clamped every Orgo into the main work area and kept no `HomeBounds`, so FC-67's return had nothing to go back to. Fixed in 6211be3 (Rescale only converts; `EnsureGridScale` then runs `ClampToArea` on the virtual screen). 312 + 77 tests pass.
+- **Installed for Rex:** 1.1.0 RC from 6211be3, `_caches	mp1-rc\orgodeskƑ1be3a5\` (placeholder bundle id, NOT FOR SALE; `releaseuild-rc.ps1` taken from branch `v1-rc` for the run, then removed). Started 04:42 with no errors.
+- **Rex's layout (he asked):** with Orgodesk closed (`--exit`), the bounds of Places, Music and Sound, AI & image gen, Internet, Dev tools and Orgo-Suite (by id) came from the 24 Nov 06:04 `layout.json.bak`; nothing else changed. Data folder from just before: `E:\AI Programs\_backups\orgodesk-data-2026-11-25-before-fc71`.
+- **Not seen on screen:** FC-71 with both cables pulled and put back.
+
 ## 2026-11-24 (evening): Rex's "the orgos are all zoomed in" (FC-67, FC-68, FC-69)
 
 - **Cause:** Rex's PC is a 2560x1440 main monitor at 150% and a 1920x1080 monitor at 100% on its left. He pulled the HDMI cable out and back in; the display-change clamp (`ClampToArea`) moved the left monitor's Orgos onto the main screen at x 0 at their 100% pixel size, so they drew 1.5x bigger in the same box, and they stayed when the monitor returned (FC-34). Same code in 1.0.1, the 2b1861be8 RC and main.
