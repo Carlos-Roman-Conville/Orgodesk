@@ -6,12 +6,13 @@ namespace Orgodesk.Core.Fences;
 public static class FreeGrid
 {
     /// <summary>Snaps a top-left point to the nearest grid cell origin inside the area.</summary>
-    public static Point Snap(Point p, Rectangle area, LayoutMetrics m)
+    public static Point Snap(Point p, Rectangle area, LayoutMetrics m, bool keepInside = true)
     {
         int col = (int)Math.Round((double)(p.X - area.X) / m.CellWidth);
         int row = (int)Math.Round((double)(p.Y - area.Y) / m.CellHeight);
         int x = area.X + col * m.CellWidth;
         int y = area.Y + row * m.CellHeight;
+        if (!keepInside) return new Point(x, y);
         x = Math.Clamp(x, area.X, Math.Max(area.X, area.Right - m.CellWidth));
         y = Math.Clamp(y, area.Y, Math.Max(area.Y, area.Bottom - m.CellHeight));
         return new Point(x, y);

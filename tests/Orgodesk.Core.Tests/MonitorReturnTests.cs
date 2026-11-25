@@ -137,4 +137,47 @@ public class MonitorReturnTests
             try { Directory.Delete(root, recursive: true); } catch { }
         }
     }
+
+    // FC-71: Rex, 2026-11-25, both HDMI cables out and back in. With no monitor Windows reports a 1920x1080 screen at
+    // 100%, so the scale change (Rescale) ran as well as the clamp. Rescale squeezed every Orgo into that screen and kept
+    // no home, so the main screen's right-hand Orgos stayed at x 1506 when the 2560 px screen came back.
+    private static readonly Rectangle OnMainRight = new(2146, 96, 414, 747);
+
+    // What DesktopSurface does on a display change: rescale to the main screen's scale, then clamp to the whole screen.
+    private static void DisplayChange(Layout l, double scale, Rectangle work, Rectangle virtualScreen)
+    {
+        var m = LayoutMetrics.Default.Scale(scale);
+        LayoutReconciler.Rescale(l, scale, work, m);
+        LayoutReconciler.ClampToArea(l, virtualScreen, m);
+    }
+
+    private static void Near(Rectangle want, Rectangle got) =>
+        Assert.True(Math.Abs(want.X - got.X) <= 1 && Math.Abs(want.Y - got.Y) <= 1
+            && Math.Abs(want.Width - got.Width) <= 1 && Math.Abs(want.Height - got.Height) <= 1, $"want {want}, got {got}");
+
+    [Fact]
+    public void OrgosGoBackAfterBothMonitorsWereUnpluggedAndTheScaleDropped()
+    {
+        var l = TwoOrgos();
+        l.ActivePage.Fences.Add(new Fence { Id = "right", Bounds = OnMainRight });
+        l.GridScale = 1.5;
+        DisplayChange(l, 1.0, new Rectangle(0, 0, 1920, 1040), new Rectangle(0, 0, 1920, 1080));   // both unplugged
+        DisplayChange(l, 1.5, new Rectangle(0, 0, 2560, 1400), BothScreens);                        // both back
+        Near(OnLeft, l.FindFence("left")!.Bounds);
+        Near(OnMain, l.FindFence("main")!.Bounds);
+        Near(OnMainRight, l.FindFence("right")!.Bounds);
+    }
+
+    [Fact]
+    public void FreeIconGoesBackAfterTheScaleDropped()
+    {
+        var l = IconOnTheLeft();
+        var home = FreeGrid.Snap(IconOnLeft, MainOnly, LayoutMetrics.Default.Scale(1.5), keepInside: false);   // on the 150% grid
+        l.ActivePage.FreeItems["left.lnk"] = home;
+        l.GridScale = 1.5;
+        DisplayChange(l, 1.0, new Rectangle(0, 0, 1920, 1040), new Rectangle(0, 0, 1920, 1080));
+        DisplayChange(l, 1.5, new Rectangle(0, 0, 2560, 1400), BothScreens);
+        var p = l.ActivePage.FreeItems["left.lnk"];
+        Assert.True(Math.Abs(p.X - home.X) <= 1 && Math.Abs(p.Y - home.Y) <= 1, $"want {home}, got {p}");
+    }
 }

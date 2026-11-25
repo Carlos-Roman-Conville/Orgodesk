@@ -183,6 +183,7 @@ public static class LayoutReconciler
     /// Converts every page's and preset's fence bounds and free icon positions from the scale the layout was laid out at
     /// (<see cref="Layout.GridScale"/>) to <paramref name="scale"/>, then moves any icon that would overlap to a free cell.
     /// A layout with no recorded scale is only stamped with the current one. Returns true if the layout changed.
+    /// Nothing is pulled on screen here: callers run <see cref="ClampToArea"/> afterwards.
     /// </summary>
     public static bool Rescale(Layout layout, double scale, Rectangle area, LayoutMetrics m)
     {
@@ -196,10 +197,11 @@ public static class LayoutReconciler
         {
             foreach (var f in page.Fences)
             {
+                // FC-71: converted, never clamped here. Clamping is ClampToArea's job, which remembers the home; a clamp
+                // here lost every Orgo outside the main screen when the scale changed with a monitor unplugged.
                 var b = f.Bounds;
-                f.Bounds = FenceLayoutEngine.ClampBounds(new Rectangle(S(b.X, area.X), S(b.Y, area.Y),
-                    (int)Math.Round(b.Width * ratio), (int)Math.Round(b.Height * ratio)), area, m);
-                if (f.HomeBounds is { } h)   // off screen by definition, so converted but not clamped
+                f.Bounds = new Rectangle(S(b.X, area.X), S(b.Y, area.Y), (int)Math.Round(b.Width * ratio), (int)Math.Round(b.Height * ratio));
+                if (f.HomeBounds is { } h)
                     f.HomeBounds = new Rectangle(S(h.X, area.X), S(h.Y, area.Y), (int)Math.Round(h.Width * ratio), (int)Math.Round(h.Height * ratio));
             }
             // Re-place free icons in reading order (column by column, like the grid fills) so earlier ones keep their spots.
@@ -207,7 +209,7 @@ public static class LayoutReconciler
             page.FreeItems.Clear();
             foreach (var (key, p) in items)
             {
-                var target = FreeGrid.Snap(new Point(S(p.X, area.X), S(p.Y, area.Y)), area, m);
+                var target = FreeGrid.Snap(new Point(S(p.X, area.X), S(p.Y, area.Y)), area, m, keepInside: false);
                 page.FreeItems[key] = IsFree(page, target, m) ? target : NextFreeSlot(page, area, m);
             }
             foreach (var (key, h) in page.FreeHomes.ToList()) page.FreeHomes[key] = new Point(S(h.X, area.X), S(h.Y, area.Y));

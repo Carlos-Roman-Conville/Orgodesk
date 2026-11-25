@@ -7,6 +7,7 @@ All notable changes to Orgodesk are listed here. The format follows [Keep a Chan
 ### Fixed
 - Orgos on a monitor that is unplugged for a moment (a cable pulled out and back in) go back to that monitor when it returns, instead of staying piled on the main screen at the wrong size; loose desktop icons do the same (FC-67).
 - At 125% to 200% display scaling, icons without a 256-pixel image are no longer drawn tiny in the corner of their cell (FC-68).
+- Orgos also go back when every monitor was unplugged at once and the display scale changed while they were gone; before, the scale change pushed them onto the main screen and they forgot where they came from (FC-71).
 - Switching a preset through OrgoAI keeps groups on a second monitor instead of moving them onto the main screen (FC-69).
 
 ## [1.1.0] - unreleased

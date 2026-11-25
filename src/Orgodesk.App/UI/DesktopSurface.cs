@@ -156,7 +156,10 @@ public sealed class DesktopSurface : Control
     private bool EnsureGridScale(Rectangle area, LayoutMetrics m)
     {
         var scale = ScreenInfo.ScaleAt(new Point(area.X + area.Width / 2, area.Y + area.Height / 2));
-        return LayoutReconciler.Rescale(_model.Layout, scale, area, m);
+        if (!LayoutReconciler.Rescale(_model.Layout, scale, area, m)) return false;
+        var all = ScreenInfo.VirtualScreen;   // FC-71: Rescale no longer clamps; this clamp remembers each Orgo's home
+        LayoutReconciler.ClampToArea(_model.Layout, all, _renderer.MetricsAt(all.Location));
+        return true;
     }
 
     protected override void OnHandleCreated(EventArgs e)
